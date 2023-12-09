@@ -12,6 +12,7 @@ import UploadModal from './UploadModal';
 import { AuditorItems, LOGO, OwnerItems } from './constants';
 import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
 import { Project, UserRole } from './types';
+import Login from './Login';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -19,8 +20,8 @@ const { Content, Sider } = Layout;
 let pushUser: PushAPI;
 const App = (props: { role: string; stakeholderId: string; userId: string }) => {
 	const [selectedView, setSelectedView] = useState('currReqs');
+	const [isConnected, setIsConnected] = useState(false);
 	const [sendNotification] = useSendNotifications();
-	// const [isLoading, setIsLoading] = useState(true);
 
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
 	const [isBidModalVisible, setIsBidModalVisible] = useState(false);
@@ -117,7 +118,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 												notification: { title: 'This is title', body: 'This is body' },
 											});
 										}}
-										src='https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png'
+										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
 									/>
 								);
 							})}
@@ -142,7 +143,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 												notification: { title: 'This is title', body: 'This is body' },
 											});
 										}}
-										src='https://media-public.canva.com/eVBaE/MAE2LjeVBaE/1/tl.png'
+										src="https://media-public.canva.com/eVBaE/MAE2LjeVBaE/1/tl.png"
 									/>
 								);
 							})}
@@ -174,7 +175,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 									recipient: ['*'],
 								});
 							}}
-							src=''
+							src=""
 						/>
 					</CardContainer>
 				);
@@ -187,7 +188,31 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	let rightContent = getRightSideContent(selectedView);
 
 	console.log('rightContent', rightContent);
+	// Button handler button for handling a
+	// request event for metamask
+	const authenticate = () => {
+		// Asking if metamask is already present or not
+		//@ts-ignore
+		if (window.ethereum) {
+			// res[0] for fetching a first wallet
+			//@ts-ignore
+			window.ethereum.request({ method: 'eth_requestAccounts' }).then((res: any) => accountChangeHandler(res[0]));
+		} else {
+			alert('install metamask extension!!');
+		}
+	};
 
+	// Function for getting handling all events
+	const accountChangeHandler = (account: any) => {
+		// Setting an address data
+		setIsConnected(true);
+		console.log('Account: ', account);
+
+		// TODO:
+		// Add the user to the notification channel
+		// and store the pushUser object in the state
+		// Build a logout button to setIsConnected(false)
+	};
 	return (
 		<StyledApp>
 			<Layout>
@@ -225,9 +250,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 
 					{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
 				</Layout>
+				<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
+				<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
 			</Layout>
-			<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
-			<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
+			{!isConnected && <Login handleLogin={authenticate} />}
 		</StyledApp>
 	);
 };

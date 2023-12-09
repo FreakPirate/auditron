@@ -51,10 +51,19 @@ app.post('/file/upload', upload.single('file'), async (req, res) => {
 	});
 	console.log('Response from Pinata => ', pinataRes);
 	const fileUrl = `https://gateway.pinata.cloud/ipfs/${pinataRes.IpfsHash}`;
-	res.status(200).json({ ...pinataRes, url: fileUrl });
-	
-	const auditReport = await generateAuditReport(fileUrl);
-	console.log('Audit report => ', auditReport);
+	return res.status(200).json({ ...pinataRes, url: fileUrl });
+});
+
+app.get('/api/audit-report/:fileUrl', async (req: Request, res: Response) => {
+	try {
+		const fileUrl = req.params.fileUrl as string;
+		const auditReport = await generateAuditReport(fileUrl);
+		res.status(200).json({
+			data: auditReport,
+		});
+	} catch (error) {
+		res.status(500).json({ message: error });
+	}
 });
 
 app.get('/api/active-projects/:userId/:role', async (req: Request, res: Response) => {
