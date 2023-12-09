@@ -1,26 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { Tag, Layout, Menu, Tooltip, Button } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
-import { AuditorItems, LOGO, OwnerItems } from './constants';
+import { PushAPI } from '@pushprotocol/restapi';
+import { Button, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
-import UploadModal from './UploadModal';
+import { useState } from 'react';
+import styled from 'styled-components';
 import AuditRequestCard from './AuditRequestCard';
-import NotificationsTab from './Notifications/NotificationsTab';
 import BidModal from './BidModal';
-import * as ethers from 'ethers';
-import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
-import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
+import ChatWrapper from './Chatting/ChatWrapper';
+import NotificationsTab from './Notifications/NotificationsTab';
+import { useSendNotifications } from './Notifications/useSendNotifications';
+import UploadModal from './UploadModal';
+import { AuditorItems, LOGO, OwnerItems } from './constants';
+// import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
 let pushUser: PushAPI;
 const App = (props: { role: string; stakeholderId: string }) => {
-	const PK = '42b625180101ea78fa3df31daa5f3ce99b3062c8ac514e0f762f2f46599eece6'; // channel private key
-	const Pkey = `0x${PK}`;
-	const signer = new ethers.Wallet(Pkey);
 
 	const [selectedView, setSelectedView] = useState('currReqs');
+	const [sendNotification] = useSendNotifications();
 	// const [isLoading, setIsLoading] = useState(true);
 
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
@@ -39,39 +37,42 @@ const App = (props: { role: string; stakeholderId: string }) => {
 		setSelectedView(key);
 	};
 
-	const getActiveBidProjectsForStakeholderUI = async () => {
-		const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
-		return activeBidProjects;
-	};
+	// const getActiveBidProjectsForStakeholderUI = async () => {
+	// 	const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+	// 	return activeBidProjects;
+	// };
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
-			case 'currReqs':
-				const activeBidProjects = getActiveBidProjectsForStakeholderUI();
-				return (
-					<CardContainer>
-						<>
-							{
-								// @ts-ignore
-								activeBidProjects.map(item => {
-									<AuditRequestCard
-										role={props.role}
-										openBidModal={() => setIsBidModalVisible(true)}
-										name={item.projectName}
-										description={item.description}
-										sendNotification={async () => {
-											console.log('Sending notification');
-											const sendNotifRes = await pushUser.channel.send(['*'], {
-												notification: { title: 'This is title', body: 'This is body' },
-											});
-										}}
-									/>;
-								})
-							}
-						</>
-					</CardContainer>
-				);
+			// case 'currReqs':
+			// 	const activeBidProjects = getActiveBidProjectsForStakeholderUI();
+			// 	return (
+			// 		<CardContainer>
+			// 			<>
+			// 				{
+			// 					// @ts-ignore
+			// 					activeBidProjects.map(item => {
+			// 						<AuditRequestCard
+			// 							role={props.role}
+			// 							openBidModal={() => setIsBidModalVisible(true)}
+			// 							name={item.projectName}
+			// 							description={item.description}
+			// 							sendNotification={async () => {
+			// 								console.log('Sending notification');
+			// 								const sendNotifRes = await pushUser.channel.send(['*'], {
+			// 									notification: { title: 'This is title', body: 'This is body' },
+			// 								});
+			// 							}}
+			// 						/>;
+			// 					})
+			// 				}
+			// 			</>
+			// 		</CardContainer>
+			// 	);
 			case 'notifications': {
 				return <NotificationsTab pushUser={pushUser} />;
+			}
+			case 'chat': {
+				return <ChatWrapper pushUser={pushUser}/>;
 			}
 			default:
 				return (
@@ -82,9 +83,10 @@ const App = (props: { role: string; stakeholderId: string }) => {
 							name={''}
 							description={''}
 							sendNotification={async () => {
-								console.log('Sending notification');
-								const sendNotifRes = await pushUser.channel.send(['*'], {
-									notification: { title: 'This is title', body: 'This is body' },
+								await sendNotification({
+									title: 'This is title',
+									body: 'This is body',
+									recipient: ['*'],
 								});
 							}}
 						/>
@@ -92,13 +94,6 @@ const App = (props: { role: string; stakeholderId: string }) => {
 				);
 		}
 	};
-
-	useEffect(() => {
-		const setPushUser = async () => {
-			pushUser = await PushAPI.initialize(signer, { env: CONSTANTS.ENV.STAGING });
-		};
-		setPushUser();
-	}, []);
 
 	return (
 		<StyledApp>
