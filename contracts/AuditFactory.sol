@@ -8,7 +8,7 @@ contract ProjectFactory {
     mapping(string => address) public projectToEscrow;
 
     function createProject(string memory projectId, address _auditor, uint _amount) public {
-        AuditEscrow newProject = new AuditEscrow(_auditor, _amount);
+        AuditEscrow newProject = new AuditEscrow(msg.sender, _auditor, _amount);
         deployedProjects.push(newProject);
         projectToEscrow[projectId] = address(newProject);
     }

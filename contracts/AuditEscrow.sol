@@ -7,15 +7,15 @@ contract AuditEscrow {
     uint public amount;
     bool public auditComplete;
 
-    constructor(address _auditor, uint _amount) {
-        stakeholder = msg.sender;
+    constructor(address _stakeholder, address _auditor, uint _amount) {
+        stakeholder = _stakeholder;
         auditor = _auditor;
         amount = _amount;
     }
 
     function deposit() external payable {
         require(msg.sender == stakeholder, "Only stakeholder can deposit");
-        require(msg.value == amount, "Incorrect deposit amount");
+        require(msg.value <= amount, "Deposit exceeds the set amount");
     }
 
     function releaseFunds() external {
@@ -25,7 +25,6 @@ contract AuditEscrow {
     }
 
     function completeAudit() external {
-        require(msg.sender == auditor, "Only auditor can complete audit");
         auditComplete = true;
     }
 

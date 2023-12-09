@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
-import AuditFactoryABI from '../../contracts/AuditFactoryABI.json';
-import AuditEscrowABI from '../../contracts/AuditEscrowABI.json';
+import AuditFactoryABI from './AuditFactoryABI.json';
+import AuditEscrowABI from './AuditEscrowABI.json';
 
-const CONTRACT_ADDRESS = '0x931f9FB16f8a5260CfE66E290C2284a6575Fdecf';
+const CONTRACT_ADDRESS = '0x390B9D0aF4b4F0cE5E1ACB3CbB9304141C0FA6FD';
 
 export class ContractAdapter {
 	private signer: ethers.Signer;
@@ -13,9 +13,9 @@ export class ContractAdapter {
 		this.contract = new ethers.Contract(CONTRACT_ADDRESS, AuditFactoryABI, signer);
 	}
 
-	async createProject(auditor: string, amount: number) {
+	public async createProject(projectId: string, auditor: string, amount: number) {
 		try {
-			const tx = await this.contract.createProject(auditor, amount);
+			const tx = await this.contract.createProject(projectId, auditor, amount);
 			await tx.wait();
 			return true;
 		} catch (e) {
@@ -24,7 +24,7 @@ export class ContractAdapter {
 		}
 	}
 
-	async getProject(projectId: string) {
+	public async getProject(projectId: string) {
 		const escrowAddress = await this.contract.getEscrowAddress(projectId);
 		// check if address is valid
 		if (escrowAddress === ethers.constants.AddressZero) {
@@ -34,7 +34,7 @@ export class ContractAdapter {
 		return new ethers.Contract(escrowAddress, AuditEscrowABI, this.signer);
 	}
 
-	async deposit(projectId: string, amount: number) {
+	public async deposit(projectId: string, amount: number) {
 		try {
 			const project = await this.getProject(projectId);
 			if (!project) {
@@ -50,7 +50,7 @@ export class ContractAdapter {
 		}
 	}
 
-	async completeAudit(projectId: string) {
+	public async completeAudit(projectId: string) {
 		try {
 			const project = await this.getProject(projectId);
 			if (!project) {
@@ -66,7 +66,7 @@ export class ContractAdapter {
 		}
 	}
 
-	async releaseFunds(projectId: string) {
+	public async releaseFunds(projectId: string) {
 		try {
 			const project = await this.getProject(projectId);
 			if (!project) {
@@ -82,7 +82,7 @@ export class ContractAdapter {
 		}
 	}
 
-	async refundStakeholder(projectId: string) {
+	public async refundStakeholder(projectId: string) {
 		try {
 			const project = await this.getProject(projectId);
 			if (!project) {
@@ -101,10 +101,12 @@ export class ContractAdapter {
 
 export const getSigner = async () => {
 	// Connect to Ethereum using Ethers.js and MetaMask
+	//@ts-ignore
 	if (!window.ethereum) {
 		throw new Error('MetaMask is not installed!');
 	}
 
+	//@ts-ignore
 	const provider = new ethers.providers.Web3Provider(window.ethereum as any);
 	await provider.send('eth_requestAccounts', []); // Request access to MetaMask
 	return provider.getSigner();
