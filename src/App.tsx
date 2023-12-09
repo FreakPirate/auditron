@@ -4,7 +4,6 @@ import { Header } from 'antd/es/layout/layout';
 import * as ethers from 'ethers';
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects, sourceUrl } from './API';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
 import ChatWrapper from './Chatting/ChatWrapper';
@@ -12,16 +11,26 @@ import Login from './Login';
 import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
-import { AI_BOT_PRIVATE_KEY, AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
-import { AuditReport, Project, UserRole } from './types';
+import {
+	createAuditFile,
+	createBid,
+	createProject,
+	getActiveBidProjectsForStakeholder,
+	getActiveProjects,
+	getAvailableBidProjectsForAuditor,
+	getCompletedProjects,
+	sourceUrl,
+} from './API';
+import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
+import { AuditorStatus, Project, UserRole, AuditStatus, AuditReport } from './types';
+// import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
 let signedPushUser: PushAPI;
 let signedUserWalletAddress: string;
-const App = (props: { role: string; stakeholderId: string; userId:string }) => {
-
-	const [selectedView, setSelectedView] = useState('currReqs');
+const App = (props: { role: string; stakeholderId: string; userId: string }) => {
+	const [selectedView, setSelectedView] = useState('undergoingAudits');
 	const [isConnected, setIsConnected] = useState(false);
 	const [open, setDrawerOpen] = useState(false);
 	const [sendNotification] = useSendNotifications();
@@ -33,6 +42,8 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 	const [activeProjects, setActiveProjects] = useState<Project[]>([]);
 	const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
 	const [activeBidProjectsForAuditor, setActiveBidProjectsForAuditor] = useState<Project[]>([]);
+
+	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 	const getSidebarItems = () => {
 		switch (props.role) {
 			case 'stakeholder':
@@ -64,11 +75,12 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 			fetchActiveBidProjectsforStakeholder();
 		} else if (props.role === 'auditor') {
 			const fetchActiveBidProjectsForAuditor = async () => {
-				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				const activeBidProjects = await getAvailableBidProjectsForAuditor(props.stakeholderId);
 				setActiveBidProjectsForAuditor(activeBidProjects);
 			};
 
 			fetchActiveBidProjectsForAuditor();
+			setSelectedView('availableBids');
 		}
 
 		const fetchActiveProjects = async () => {
@@ -101,9 +113,12 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 								return (
 									<AuditRequestCard
 										role={props.role}
-										showDrawer={showDrawer}
-										openBidModal={() => setIsBidModalVisible(true)}
+										openBidModal={() => {
+											setSelectedProject(item);
+											setIsBidModalVisible(true);
+										}}
 										name={item.projectName}
+										showDrawer={showDrawer}
 										description={item.description}
 										sendNotification={async () => {
 											await sendNotification({
@@ -205,7 +220,7 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 				);
 				break;
 			case 'notifications': {
-				rightContent = <NotificationsTab signedPushUser={signedPushUser}/>;
+				rightContent = <NotificationsTab signedPushUser={signedPushUser} />;
 				break;
 			}
 			default:
@@ -252,8 +267,8 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 	};
 
 	// Function for getting handling all events
-    const accountChangeHandler = async (account: any) => {
-        // Setting an address data
+	const accountChangeHandler = async (account: any) => {
+		// Setting an address data
 		setIsConnected(true);
 		console.log('Account: ', account);
 		signedUserWalletAddress = account;
@@ -265,13 +280,15 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 		signedPushUser = await PushAPI.initialize(signer, { env: CONSTANTS.ENV.STAGING });
 		console.log('signedPushUser: ', signedPushUser);
 		// Add the user to the notification channel
+		// and store the pushUser object in the state
+		// Build a logout button to setIsConnected(false)
 		const res = await signedPushUser.notification.subscribe(
 			`${CHANNEL_ADDRESS}`, // channel address in CAIP format
 		);
 		console.log('res: ', res);
     };
 
-	const handleFileSubmit = async () => {
+	const sendReportToGroupChat = async () => {
 		// Initializing the AI BOT Push user to make it able to send messages in the chat
 		//@ts-ignore
 		const aiPK = AI_BOT_PRIVATE_KEY; // channel private key (Already compromised)
@@ -363,10 +380,60 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 		}
 	};
 
+	const onCreateProjectHandler = async (values: any) => {
+		const projectId = generateId();
+		const projectState = {
+			id: projectId,
+			status: AuditStatus.BID,
+			stakeholderId: props.stakeholderId,
+			auditorId: '',
+			aiAuditStatus: AuditorStatus.PENDING,
+			manualAuditStatus: AuditorStatus.PENDING,
+			projectName: values.name as string,
+			budget: values.budget as number,
+			description: values.description as string,
+		};
+
+		console.log('projectState', projectState);
+		await createProject(projectState);
+		setActiveBidProjectsforStakeholder([...activeBidProjectsForStakeholder, projectState]);
+		await sendReportToGroupChat();
+		// TODO
+		// await createAuditFile('https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J');
+
+		// 	stakeholderId: string;
+		// description: string;
+		// submissionDate: admin.firestore.Timestamp;
+		// deadline: admin.firestore.Timestamp;
+		// budget: number;
+		// status: AuditStatus;
+		// aiAuditStatus: AuditorStatus;
+		// manualAuditStatus: AuditorStatus;
+		// auditorId: string;
+	};
+
+	// function to genrate random 10 digit id
+	const generateId = () => {
+		return 'a' + Math.floor(Math.random() * Math.floor(Date.now()));
+	};
+
+	const onSubmitBidHandler = async (values: any) => {
+		const bidId = generateId();
+		const bidState = {
+			id: bidId,
+			projectId: selectedProject?.id!,
+			auditorId: props.userId,
+			bidAmount: values.budget as number,
+			description: '',
+		};
+
+		console.log('bidState', bidState);
+		await createBid(bidState);
+	};
 	return (
-		<React.StrictMode>
-			<StyledApp>
-				{isConnected && <Layout>
+		<StyledApp>
+			{isConnected && (
+				<Layout>
 					<StyledSider width={250}>
 						<AppLogo className="logo">
 							<LogoWrapper src={LOGO} alt="dAd Space" />
@@ -375,7 +442,7 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 							theme="dark"
 							defaultSelectedKeys={[selectedView]}
 							mode="inline"
-							items={OwnerItems}
+							items={getSidebarItems()}
 							selectedKeys={[selectedView]}
 							onClick={handleMenuItemSelect}
 						/>
@@ -391,94 +458,45 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 							}}
 						>
 							<div style={{ fontSize: '20px', fontWeight: '700' }}>
-								{OwnerItems.filter(item => item.key === selectedView)[0].label}
+								{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
 							</div>
-							<div>
-								<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-									{' '}
-									Add new{' '}
-								</Button>
-								{/* <MetaMaskButton theme={'light'} color="white"></MetaMaskButton> */}
-							</div>
+							<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+								{' '}
+								Add new{' '}
+							</Button>
 						</Header>
 
-						{<Content style={{ display: 'flex' }}>
-							{rightContent}
-							<Drawer title="Discussions" placement={'right'} onClose={onClose} open={open} key={'right'} size={'large'}>
-								<ChatWrapper />
-							</Drawer>
-						</Content>}
+						{
+							<Content style={{ display: 'flex' }}>
+								{rightContent}
+								<Drawer
+									title="Discussions"
+									placement={'right'}
+									onClose={onClose}
+									open={open}
+									key={'right'}
+									size={'large'}
+								>
+									<ChatWrapper />
+								</Drawer>
+							</Content>
+						}
 					</Layout>
 					<UploadModal
 						isModalOpen={isUploadModalVisible}
-						handleSubmit={handleFileSubmit}
 						closeModal={() => setIsUploadModalVisible(false)}
+						onSubmitHandler={onCreateProjectHandler}
+						initialValues={{ name: '', description: '', budget: '0', files: [] }}
 					/>
-					<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
-				</Layout>}
-				{!isConnected && <Login handleLogin={authenticate} />}
-			</StyledApp>
-			{/* <MetaMaskUIProvider
-				sdkOptions={{
-					dappMetadata: {
-						name: 'Auditron',
-					},
-				}}
-			>
-				<StyledApp>
-					<Layout>
-						<StyledSider width={250}>
-							<AppLogo className="logo">
-								<LogoWrapper src={LOGO} alt="dAd Space" />
-							</AppLogo>
-							<StyledMenu
-								theme="dark"
-								defaultSelectedKeys={[selectedView]}
-								mode="inline"
-								items={OwnerItems}
-								selectedKeys={[selectedView]}
-								onClick={handleMenuItemSelect}
-							/>
-						</StyledSider>
-						<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-							<Header
-								style={{
-									padding: '2rem',
-									background: 'transparent',
-									display: 'flex',
-									justifyContent: 'space-between',
-									alignItems: 'center',
-								}}
-							>
-								<div style={{ fontSize: '20px', fontWeight: '700' }}>
-									{OwnerItems.filter(item => item.key === selectedView)[0].label}
-								</div>
-								<div>
-									<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-										{' '}
-										Add new{' '}
-									</Button>
-									<MetaMaskButton theme={'light'} color="white"></MetaMaskButton>
-								</div>
-							</Header>
-
-							{<Content style={{ display: 'flex' }}>
-								{rightContent}
-								<Drawer title="Discussions" placement={'right'} onClose={onClose} open={open} key={'right'} size={'large'}>
-									<ChatWrapper />
-								</Drawer>
-							</Content>}
-						</Layout>
-						<UploadModal
-							isModalOpen={isUploadModalVisible}
-							closeModal={() => setIsUploadModalVisible(false)}
-						/>
-						<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
-					</Layout>
-					{!isConnected && <Login handleLogin={authenticate} />}
-				</StyledApp>
-			</MetaMaskUIProvider> */}
-		</React.StrictMode>
+					<BidModal
+						isModalOpen={isBidModalVisible}
+						closeModal={() => setIsBidModalVisible(false)}
+						onSubmitHandler={onSubmitBidHandler}
+					/>
+				</Layout>
+			)}
+			{!isConnected && <Login handleLogin={authenticate} />}
+		</StyledApp>
 	);
 };
 

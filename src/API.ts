@@ -1,4 +1,4 @@
-import { Project, UserRole } from "./types";
+import { Project, UserBid, UserRole } from "./types";
 
 export const sourceUrl = 'http://localhost:3001';
 // /api/active-projects/:userId/:role
@@ -135,6 +135,20 @@ export const assignAuditor = async (projectId: string, auditorId: string): Promi
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ auditorId }),
+    });
+    const data = await response.json();
+    return data.data;
+}
+
+
+// /api/bid
+export const createBid = async (bid: UserBid): Promise<any> => {
+    const response = await fetch(`${sourceUrl}/api/bid`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bid),
     });
     const data = await response.json();
     return data.data;

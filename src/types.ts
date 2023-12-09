@@ -37,8 +37,6 @@ export type Project = {
 	projectName: string;
 	stakeholderId: string;
 	description: string;
-	submissionDate: admin.firestore.Timestamp;
-	deadline: admin.firestore.Timestamp;
 	budget: number;
 	status: AuditStatus;
 	aiAuditStatus: AuditorStatus;
@@ -55,7 +53,6 @@ export type UserBid = {
 	projectId: string;
 	auditorId: string;
 	bidAmount: number;
-	timestamp: admin.firestore.Timestamp;
 };
 
 export type AuditFile = {

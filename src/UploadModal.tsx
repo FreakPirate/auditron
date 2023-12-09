@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
-import { Button, InputNumber, Modal, DatePicker } from 'antd';
-import UploadDropZone from './UploadDropZone';
+import { DatePicker, Input, Modal } from 'antd';
+import TextArea from 'antd/es/input/TextArea';
+import { useFormik } from 'formik';
+import { useState } from 'react';
 import styled from 'styled-components';
-import type { DatePickerProps, RangePickerProps } from 'antd/es/date-picker';
+import UploadDropZone from './UploadDropZone';
 
 const { RangePicker } = DatePicker;
 
 const UploadModal = (props: {
 	isModalOpen: boolean;
-	handleSubmit: () => void;
+	initialValues: { name: string; description: string; budget: string; files: any };
 	closeModal: () => void;
+	onSubmitHandler: (values: { [key: string]: any }) => void;
 }) => {
-	const { isModalOpen, closeModal, handleSubmit } = props;
+	const { isModalOpen, closeModal, onSubmitHandler, initialValues } = props;
+	const formikForm = useFormik({
+		initialValues,
+		enableReinitialize: true,
+		onSubmit: onSubmitHandler,
+	});
+
+	const [formState, setFormState] = useState({
+		name: '',
+		description: '',
+		budget: '',
+		files: []
+	})
+
+	const { name, description, budget, files } = formikForm.values;
 
 	const handleOk = () => {
-		handleSubmit();
+		props.onSubmitHandler(formState)
+		// formikForm.submitForm();
+		closeModal();
+		// formikForm.resetForm();
 	};
 
 	const handleCancel = () => {
@@ -23,21 +42,48 @@ const UploadModal = (props: {
 
 	return (
 		<>
-			<StyledModal
-				title="Create Audit Request"
-				open={isModalOpen}
-				onOk={handleOk}
-				onCancel={handleCancel}
-			>
-				<InputNumber
-					addonBefore={'Budget'}
-					prefix="$"
-					style={{ width: '100%' }}
-				/>
-				<RangePicker
-					showTime={{ format: 'HH:mm' }}
-					format="YYYY-MM-DD HH:mm"
-				/>
+			<StyledModal title="Create Audit Request" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+				<>
+					<span>Project name</span>
+					<Input
+						name={'name'}
+						placeholder="Enter project name"
+						onChange={(e) => {
+							const updates = {...formState, name: e.target.value};
+							setFormState(updates)
+						}}
+						value={formState.name}
+					/>
+				</>
+				<>
+					<span>Description</span>
+					<TextArea
+						showCount
+						maxLength={100}
+						placeholder="Enter description"
+						style={{ height: 120, resize: 'none' }}
+						onChange={(e) => {
+							const updates = {...formState, description: e.target.value};
+							setFormState(updates)
+						}}
+						value={formState.description}
+						name={'description'}
+					/>
+				</>
+				<>
+					<span>Budget</span>
+					<Input
+						addonBefore={'Budget'}
+						prefix="$"
+						style={{ width: '100%' }}
+						onChange={(e) => {
+							const updates = {...formState, budget: e.target.value};
+							setFormState(updates)
+						}}
+						value={formState.budget}
+						name={'budget'}
+					/>
+				</>
 				<UploadDropZone />
 			</StyledModal>
 		</>
@@ -48,8 +94,8 @@ const StyledModal = styled(Modal)`
 	.ant-modal-body {
 		display: flex;
 		flex-direction: column;
-		gap: 24px;
-		margin: 24px 0px;
+		gap: 8px;
+		margin: 8px 0px;
 
 		.ant-upload-wrapper {
 			.ant-upload-list {
@@ -58,7 +104,7 @@ const StyledModal = styled(Modal)`
 			}
 		}
 
-		.ant-input-number-group-wrapper {
+		/* .ant-input-number-group-wrapper {
 			height: 50px;
 
 			.ant-input-number-wrapper {
@@ -72,10 +118,11 @@ const StyledModal = styled(Modal)`
 					height: 100%;
 				}
 			}
-		}
+		} */
 	}
 	.ant-modal-content {
 		padding: 24px;
+		width: 600px;
 	}
 `;
 
