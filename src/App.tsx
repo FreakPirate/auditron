@@ -8,14 +8,14 @@ import UploadModal from './UploadModal';
 import AuditRequestCard from './AuditRequestCard';
 import NotificationsTab from './Notifications/NotificationsTab';
 import BidModal from './BidModal';
-import * as ethers from "ethers";
-import { PushAPI, CONSTANTS } from "@pushprotocol/restapi";
+import * as ethers from 'ethers';
+import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
 import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
 let pushUser: PushAPI;
-const App = (props: { role: string }) => {
+const App = (props: { role: string; stakeholderId: string }) => {
 	const PK = '42b625180101ea78fa3df31daa5f3ce99b3062c8ac514e0f762f2f46599eece6'; // channel private key
 	const Pkey = `0x${PK}`;
 	const signer = new ethers.Wallet(Pkey);
@@ -58,6 +58,12 @@ const App = (props: { role: string }) => {
 										openBidModal={() => setIsBidModalVisible(true)}
 										name={item.projectName}
 										description={item.description}
+										sendNotification={async () => {
+											console.log('Sending notification');
+											const sendNotifRes = await pushUser.channel.send(['*'], {
+												notification: { title: 'This is title', body: 'This is body' },
+											});
+										}}
 									/>;
 								})
 							}
@@ -70,12 +76,18 @@ const App = (props: { role: string }) => {
 			default:
 				return (
 					<CardContainer>
-						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} sendNotification={async () => {
-							console.log('Sending notification');
-							const sendNotifRes = await pushUser.channel.send(["*"], {
-								notification: { title: "This is title", body: "This is body" },
-							});
-						}}/>
+						<AuditRequestCard
+							role={props.role}
+							openBidModal={() => setIsBidModalVisible(true)}
+							name={''}
+							description={''}
+							sendNotification={async () => {
+								console.log('Sending notification');
+								const sendNotifRes = await pushUser.channel.send(['*'], {
+									notification: { title: 'This is title', body: 'This is body' },
+								});
+							}}
+						/>
 					</CardContainer>
 				);
 		}
