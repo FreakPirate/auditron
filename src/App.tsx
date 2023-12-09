@@ -22,6 +22,8 @@ import {
 	getBidsForProject,
 	getCompletedProjects,
 	sourceUrl,
+	updateProjectManualAuditStatus,
+	updateProjectStatus,
 } from './API';
 import { AuditorStatus, Project, UserRole, AuditStatus, UserBid, AuditReport } from './types';
 import AllBidsModal from './AllBidsModal';
@@ -178,6 +180,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 											});
 										}}
 										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
+										updateStatus={async () => {
+											await updateProjectStatus(item.id, 'completed');
+											setCompletedProjects([...completedProjects, item]);
+											setActiveProjects(activeProjects.filter(project => project.id !== item.id));
+										}}
 									/>
 								);
 							})}
@@ -314,7 +321,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			`${CHANNEL_ADDRESS}`, // channel address in CAIP format
 		);
 		console.log('res: ', res);
-    };
+	};
 
 	const sendReportToGroupChat = async () => {
 		// Initializing the AI BOT Push user to make it able to send messages in the chat
@@ -323,14 +330,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		const Pkey = `0x${aiPK}`;
 		const aiSigner = new ethers.Wallet(Pkey);
 		const aiPushUser = await PushAPI.initialize(aiSigner, { env: CONSTANTS.ENV.STAGING });
-		
+
 		setDrawerOpen(true);
 		const chatMsgP0 = 'AUTOMATED AUDIT REPORT:';
 		await aiPushUser.chat.send(CHAT_ID, {
 			type: 'Text',
 			content: chatMsgP0,
 		});
-		
+
 		const fileUrl = IPFS_FILE_URL;
 		const res = await fetch(`${sourceUrl}/api/audit-report?url=${fileUrl}`);
 		const apiRes: { data: AuditReport | null } = await res.json();
@@ -474,7 +481,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	const onBidSelect = async (projectId: string, id: string) => {
 		setIsAllBidsModalVisible(false);
 		await assignAuditor(projectId, id);
-		showDrawer()
+		await updateProjectStatus(projectId, AuditStatus.PENDING);
+		setActiveProjects([...activeProjects, selectedProject!]);
+		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
+		showDrawer();
 	};
 
 	return (

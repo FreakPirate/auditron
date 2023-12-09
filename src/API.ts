@@ -52,7 +52,7 @@ export const createProject = async (project: Project): Promise<Project> => {
 // /api/project/status/:projectId
 export const updateProjectStatus = async (projectId: string, status: string): Promise<Project> => {
 	const response = await fetch(`${sourceUrl}/api/project/status/${projectId}`, {
-		method: 'PUT',
+		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json',
 		},
@@ -68,7 +68,7 @@ export const updateProjectManualAuditStatus = async (
 	manualAuditStatus: string,
 ): Promise<Project> => {
 	const response = await fetch(`${sourceUrl}/api/project/manual-audit-status/${projectId}`, {
-		method: 'PUT',
+		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json',
 		},
@@ -81,7 +81,7 @@ export const updateProjectManualAuditStatus = async (
 // /api/project/ai-audit-status/:projectId
 export const updateProjectAIAuditStatus = async (projectId: string, aiAuditStatus: string): Promise<Project> => {
 	const response = await fetch(`${sourceUrl}/api/project/ai-audit-status/${projectId}`, {
-		method: 'PUT',
+		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json',
 		},
@@ -94,7 +94,7 @@ export const updateProjectAIAuditStatus = async (projectId: string, aiAuditStatu
 // /api/project/auditor/:projectId
 export const updateProjectAuditor = async (projectId: string, auditorId: string): Promise<Project> => {
 	const response = await fetch(`${sourceUrl}/api/project/auditor/${projectId}`, {
-		method: 'PUT',
+		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json',
 		},
