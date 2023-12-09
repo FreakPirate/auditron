@@ -10,6 +10,7 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import { AuditorItems, LOGO, OwnerItems } from './constants';
+import Login from './Login';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -18,8 +19,8 @@ let pushUser: PushAPI;
 const App = (props: { role: string; stakeholderId: string }) => {
 
 	const [selectedView, setSelectedView] = useState('currReqs');
+	const [isConnected, setIsConnected] = useState(false);
 	const [sendNotification] = useSendNotifications();
-	// const [isLoading, setIsLoading] = useState(true);
 
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
 	const [isBidModalVisible, setIsBidModalVisible] = useState(false);
@@ -37,10 +38,6 @@ const App = (props: { role: string; stakeholderId: string }) => {
 		setSelectedView(key);
 	};
 
-	// const getActiveBidProjectsForStakeholderUI = async () => {
-	// 	const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
-	// 	return activeBidProjects;
-	// };
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
 			// case 'currReqs':
@@ -95,46 +92,74 @@ const App = (props: { role: string; stakeholderId: string }) => {
 		}
 	};
 
+	// Button handler button for handling a
+    // request event for metamask
+    const authenticate = () => {
+        // Asking if metamask is already present or not
+		//@ts-ignore
+        if (window.ethereum) {
+            // res[0] for fetching a first wallet
+			//@ts-ignore
+            window.ethereum
+                .request({ method: "eth_requestAccounts" })
+                .then((res: any) =>
+                    accountChangeHandler(res[0])
+                );
+        } else {
+            alert("install metamask extension!!");
+        }
+    };
+
+	// Function for getting handling all events
+    const accountChangeHandler = (account: any) => {
+        // Setting an address data
+		setIsConnected(true);
+		console.log('Account: ', account);
+    };
+
 	return (
 		<StyledApp>
-			<Layout>
-				<StyledSider width={250}>
-					<AppLogo className="logo">
-						<LogoWrapper src={LOGO} alt="dAd Space" />
-					</AppLogo>
-					<StyledMenu
-						theme="dark"
-						defaultSelectedKeys={[selectedView]}
-						mode="inline"
-						items={OwnerItems}
-						selectedKeys={[selectedView]}
-						onClick={handleMenuItemSelect}
-					/>
-				</StyledSider>
-				<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-					<Header
-						style={{
-							padding: '2rem',
-							background: 'transparent',
-							display: 'flex',
-							justifyContent: 'space-between',
-							alignItems: 'center',
-						}}
-					>
-						<div style={{ fontSize: '20px', fontWeight: '700' }}>
-							{OwnerItems.filter(item => item.key === selectedView)[0].label}
-						</div>
-						<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-							{' '}
-							Add new{' '}
-						</Button>
-					</Header>
+			{isConnected && <>
+				<Layout>
+					<StyledSider width={250}>
+						<AppLogo className="logo">
+							<LogoWrapper src={LOGO} alt="dAd Space" />
+						</AppLogo>
+						<StyledMenu
+							theme="dark"
+							defaultSelectedKeys={[selectedView]}
+							mode="inline"
+							items={OwnerItems}
+							selectedKeys={[selectedView]}
+							onClick={handleMenuItemSelect}
+						/>
+					</StyledSider>
+					<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
+						<Header
+							style={{
+								padding: '2rem',
+								background: 'transparent',
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+							}}
+						>
+							<div style={{ fontSize: '20px', fontWeight: '700' }}>
+								{OwnerItems.filter(item => item.key === selectedView)[0].label}
+							</div>
+							<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+								{' '}
+								Add new{' '}
+							</Button>
+						</Header>
 
-					<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>
+						<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>
+					</Layout>
 				</Layout>
-			</Layout>
-			<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
-			<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
+				<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
+				<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
+			</>}
+			{!isConnected && <Login handleLogin={authenticate}/>}
 		</StyledApp>
 	);
 };
