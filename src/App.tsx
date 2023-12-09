@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tag, Layout, Menu, Tooltip, Button } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
@@ -8,10 +8,17 @@ import UploadModal from './UploadModal';
 import AuditRequestCard from './AuditRequestCard';
 import NotificationsTab from './Notifications/NotificationsTab';
 import BidModal from './BidModal';
+import * as ethers from "ethers";
+import { PushAPI, CONSTANTS } from "@pushprotocol/restapi";
 
 const { Content, Sider } = Layout;
 
+let pushUser: PushAPI;
 const App = (props: { role: string }) => {
+	const PK = '42b625180101ea78fa3df31daa5f3ce99b3062c8ac514e0f762f2f46599eece6'; // channel private key
+	const Pkey = `0x${PK}`;
+	const signer = new ethers.Wallet(Pkey);
+
 	const [selectedView, setSelectedView] = useState('currReqs');
 	// const [isLoading, setIsLoading] = useState(true);
 
@@ -33,17 +40,29 @@ const App = (props: { role: string }) => {
 
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
-			case 'notifications':
-				return <NotificationsTab />;
+			case 'notifications': {
+				return <NotificationsTab pushUser={pushUser} />;
+			}
 			default:
 				return (
 					<CardContainer>
-						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)}/>
-						
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} sendNotification={async () => {
+							console.log('Sending notification');
+							const sendNotifRes = await pushUser.channel.send(["*"], {
+								notification: { title: "This is title", body: "This is body" },
+							});
+						}}/>
 					</CardContainer>
 				);
 		}
 	};
+
+	useEffect(() => {
+		const setPushUser = async () => {
+			pushUser = await PushAPI.initialize(signer, { env: CONSTANTS.ENV.STAGING });
+		};
+		setPushUser();
+	}, []);
 
 	return (
 		<StyledApp>

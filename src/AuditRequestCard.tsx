@@ -12,6 +12,7 @@ const { Meta } = Card;
 const AuditRequestCard = (props: {
 	role: string;
 	openBidModal: () => void;
+	sendNotification: () => void;
 }) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
@@ -31,7 +32,7 @@ const AuditRequestCard = (props: {
 					onClick={props.openBidModal}
 				/>
 			),
-			<EllipsisOutlined key="ellipsis" />,
+			<EllipsisOutlined key="ellipsis" onClick={props.sendNotification}/>,
 		]}
 	>
 		<Meta
