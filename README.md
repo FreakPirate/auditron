@@ -1,7 +1,7 @@
 
 # AI-Enabled Smart Contract Auditor
 
-![Project Logo](https://rocketium.com/images/v2/5ee1a13c9855283dbe2269f2/original/0f736fbd-5f0a-47af-ab0c-0db4c779675d_1702048266746.png)
+![Project Logo](https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/d238962e-7870-482b-a64c-5917af20d8a1_1702066344117.png)
 
 ## Overview
 
