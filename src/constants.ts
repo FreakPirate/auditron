@@ -16,5 +16,5 @@ export const AuditorItems = [
 	{ label: 'Chattu', key: 'chat' },
 ];
 
-export const CHANNEL_ADDRESS = 'eip155:5:0x4D92c9a3Db746bD0Fb65957eA6054D9d07d90412';
+export const CHANNEL_ADDRESS = 'eip155:11155111:0x4D92c9a3Db746bD0Fb65957eA6054D9d07d90412';
 

@@ -1,4 +1,4 @@
-import { PushAPI } from '@pushprotocol/restapi';
+import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
 import { Button, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
 import { useState } from 'react';
@@ -9,13 +9,15 @@ import ChatWrapper from './Chatting/ChatWrapper';
 import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
-import { AuditorItems, LOGO, OwnerItems } from './constants';
+import { AuditorItems, CHANNEL_ADDRESS, LOGO, OwnerItems } from './constants';
 import Login from './Login';
+import * as ethers from 'ethers';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
-let pushUser: PushAPI;
+let signedPushUser: PushAPI;
+let signedUserWalletAddress: string;
 const App = (props: { role: string; stakeholderId: string }) => {
 
 	const [selectedView, setSelectedView] = useState('currReqs');
@@ -66,10 +68,10 @@ const App = (props: { role: string; stakeholderId: string }) => {
 			// 		</CardContainer>
 			// 	);
 			case 'notifications': {
-				return <NotificationsTab pushUser={pushUser} />;
+				return <NotificationsTab signedPushUser={signedPushUser}/>;
 			}
 			case 'chat': {
-				return <ChatWrapper pushUser={pushUser}/>;
+				return <ChatWrapper />;
 			}
 			default:
 				return (
@@ -81,9 +83,9 @@ const App = (props: { role: string; stakeholderId: string }) => {
 							description={''}
 							sendNotification={async () => {
 								await sendNotification({
-									title: 'This is title',
-									body: 'This is body',
-									recipient: ['*'],
+									title: 'This is title for 1',
+									body: 'This is body for 1',
+									recipient: [signedUserWalletAddress],
 								});
 							}}
 						/>
@@ -111,15 +113,23 @@ const App = (props: { role: string; stakeholderId: string }) => {
     };
 
 	// Function for getting handling all events
-    const accountChangeHandler = (account: any) => {
+    const accountChangeHandler = async (account: any) => {
         // Setting an address data
 		setIsConnected(true);
 		console.log('Account: ', account);
-
-		// TODO:
+		signedUserWalletAddress = account;
+		// Creating a signer object based on the connected account
+		//@ts-ignore
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		const signer = provider.getSigner(account);
+		console.log('Signer: ', signer);
+		signedPushUser = await PushAPI.initialize(signer, { env: CONSTANTS.ENV.STAGING });
+		console.log('signedPushUser: ', signedPushUser);
 		// Add the user to the notification channel
-		// and store the pushUser object in the state
-		// Build a logout button to setIsConnected(false)
+		const res = await signedPushUser.notification.subscribe(
+			`${CHANNEL_ADDRESS}`, // channel address in CAIP format
+		);
+		console.log('res: ', res);
     };
 
 	return (

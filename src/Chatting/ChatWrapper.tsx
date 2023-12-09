@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { ChatView, ChatUIProvider, darkChatTheme } from "@pushprotocol/uiweb";
-import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
+import { CONSTANTS } from '@pushprotocol/restapi';
+import { ChatUIProvider, ChatView, darkChatTheme } from "@pushprotocol/uiweb";
 
-const ChatWrapper = (props: { pushUser: any }) => {
+const ChatWrapper = (props: {}) => {
 
     return <ChatUIProvider theme={darkChatTheme} env={CONSTANTS.ENV.STAGING}>
                 <ChatView
