@@ -20,11 +20,12 @@ contract AuditEscrow {
 
     function releaseFunds() external {
         require(msg.sender == stakeholder, "Only stakeholder can release funds");
-        require(auditComplete, "Audit is not complete");
+        //require(auditComplete, "Audit is not complete");
         payable(auditor).transfer(address(this).balance);
     }
 
     function completeAudit() external {
+        //require(msg.sender == auditor, "Only auditor can complete audit");
         auditComplete = true;
     }
 

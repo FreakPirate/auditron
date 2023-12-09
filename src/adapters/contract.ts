@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import AuditFactoryABI from './AuditFactoryABI.json';
 import AuditEscrowABI from './AuditEscrowABI.json';
 
-const CONTRACT_ADDRESS = '0x390B9D0aF4b4F0cE5E1ACB3CbB9304141C0FA6FD';
+const CONTRACT_ADDRESS = '0x0f51b6cfe7E086d35885E1389E50A06D2c1d0f72';
 
 export class ContractAdapter {
 	private signer: ethers.Signer;
