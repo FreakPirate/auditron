@@ -28,7 +28,11 @@ const port = process.env.PORT || 3001;
 const upload = multer({ dest: 'uploads/' });
 const pinata = new pinataSDK({ pinataJWTKey: process.env.PINATA_JWT });
 app.use(cors());
+// For JSON data
+app.use(express.json());
 
+// For URL-encoded data
+app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
 	res.send('Hello, TypeScript with Express!');
 });
@@ -131,11 +135,13 @@ app.get('/api/available-bid-projects/auditor/:auditorId', async (req: Request, r
 app.post('/api/project', async (req: Request, res: Response) => {
 	try {
 		const newProject = req.body;
+		console.log('newProject', newProject, req.body);
 		await createNewProject(newProject);
 		res.status(200).json({
 			message: 'Project created successfully',
 		});
 	} catch (error) {
+		console.log('Error creating project', error);
 		res.status(500).json({ message: error });
 	}
 });
@@ -219,11 +225,13 @@ app.post('/api/user', async (req: Request, res: Response) => {
 app.post('/api/audit-file', async (req: Request, res: Response) => {
 	try {
 		const newAuditFile = req.body;
+		console.log('newAuditFile', newAuditFile);
 		await createNewAuditFile(newAuditFile);
 		res.status(200).json({
 			message: 'Audit file created successfully',
 		});
 	} catch (error) {
+		console.log('Error creating audit file', error);
 		res.status(500).json({ message: error });
 	}
 });

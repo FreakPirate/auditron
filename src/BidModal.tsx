@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Button, InputNumber, Modal } from 'antd';
+import { Button, Input, InputNumber, Modal } from 'antd';
 import UploadDropZone from './UploadDropZone';
 import styled from 'styled-components';
 
-const BidModal = (props: { isModalOpen: boolean; closeModal: () => void }) => {
+const BidModal = (props: {
+	isModalOpen: boolean;
+	closeModal: () => void;
+	onSubmitHandler: (values: { budget: string }) => void;
+}) => {
 	const { isModalOpen, closeModal } = props;
+
+	const [formState, setFormState] = useState({
+		budget: '',
+	});
 
 	// useEffect(() => {
 	// 	async function fetchData() {
@@ -14,6 +22,7 @@ const BidModal = (props: { isModalOpen: boolean; closeModal: () => void }) => {
 	// 	fetchData();
 	// }, []);
 	const handleOk = () => {
+		props.onSubmitHandler(formState);
 		closeModal();
 	};
 
@@ -23,16 +32,16 @@ const BidModal = (props: { isModalOpen: boolean; closeModal: () => void }) => {
 
 	return (
 		<>
-			<StyledModal
-				title="Submit your bid"
-				open={isModalOpen}
-				onOk={handleOk}
-				onCancel={handleCancel}
-			>
-				<InputNumber
+			<StyledModal title="Submit your bid" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+				<Input
 					addonBefore={'Budget'}
 					prefix="$"
 					style={{ width: '100%' }}
+					onChange={e =>
+						setFormState({
+							budget: e.target.value,
+						})
+					}
 				/>
 			</StyledModal>
 		</>

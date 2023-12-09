@@ -10,8 +10,16 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import { AuditorItems, LOGO, OwnerItems } from './constants';
-import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
-import { Project, UserRole } from './types';
+import {
+	createAuditFile,
+	createBid,
+	createProject,
+	getActiveBidProjectsForStakeholder,
+	getActiveProjects,
+	getAvailableBidProjectsForAuditor,
+	getCompletedProjects,
+} from './API';
+import { AuditorStatus, Project, UserRole, AuditStatus } from './types';
 import Login from './Login';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
@@ -19,7 +27,7 @@ const { Content, Sider } = Layout;
 
 let pushUser: PushAPI;
 const App = (props: { role: string; stakeholderId: string; userId: string }) => {
-	const [selectedView, setSelectedView] = useState('currReqs');
+	const [selectedView, setSelectedView] = useState('undergoingAudits');
 	const [isConnected, setIsConnected] = useState(false);
 	const [sendNotification] = useSendNotifications();
 
@@ -30,6 +38,8 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	const [activeProjects, setActiveProjects] = useState<Project[]>([]);
 	const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
 	const [activeBidProjectsForAuditor, setActiveBidProjectsForAuditor] = useState<Project[]>([]);
+
+	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 	const getSidebarItems = () => {
 		switch (props.role) {
 			case 'stakeholder':
@@ -53,11 +63,12 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			fetchActiveBidProjectsforStakeholder();
 		} else if (props.role === 'auditor') {
 			const fetchActiveBidProjectsForAuditor = async () => {
-				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				const activeBidProjects = await getAvailableBidProjectsForAuditor(props.stakeholderId);
 				setActiveBidProjectsForAuditor(activeBidProjects);
 			};
 
 			fetchActiveBidProjectsForAuditor();
+			setSelectedView('availableBids');
 		}
 
 		const fetchActiveProjects = async () => {
@@ -90,7 +101,9 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 								return (
 									<AuditRequestCard
 										role={props.role}
-										openBidModal={() => setIsBidModalVisible(true)}
+										openBidModal={() => {
+											setSelectedProject(item);
+											setIsBidModalVisible(true);}}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
@@ -245,6 +258,56 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		// and store the pushUser object in the state
 		// Build a logout button to setIsConnected(false)
 	};
+
+	const onCreateProjectHandler = async (values: any) => {
+		const projectId = generateId();
+		const projectState = {
+			id: projectId,
+			status: AuditStatus.BID,
+			stakeholderId: props.stakeholderId,
+			auditorId: '',
+			aiAuditStatus: AuditorStatus.PENDING,
+			manualAuditStatus: AuditorStatus.PENDING,
+			projectName: values.name as string,
+			budget: values.budget as number,
+			description: values.description as string,
+		};
+
+		console.log('projectState', projectState);
+		await createProject(projectState);
+		setActiveBidProjectsforStakeholder([...activeBidProjectsForStakeholder, projectState]);
+		// TODO
+		// await createAuditFile('https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J');
+
+		// 	stakeholderId: string;
+		// description: string;
+		// submissionDate: admin.firestore.Timestamp;
+		// deadline: admin.firestore.Timestamp;
+		// budget: number;
+		// status: AuditStatus;
+		// aiAuditStatus: AuditorStatus;
+		// manualAuditStatus: AuditorStatus;
+		// auditorId: string;
+	};
+
+	// function to genrate random 10 digit id
+	const generateId = () => {
+		return 'a' + Math.floor(Math.random() * Math.floor(Date.now()));
+	};
+
+	const onSubmitBidHandler = async (values: any) => {
+		const bidId = generateId();
+		const bidState = {
+			id: bidId,
+			projectId: selectedProject?.id!,
+			auditorId: props.userId,
+			bidAmount: values.budget as number,
+			description: '',
+		};
+
+		console.log('bidState', bidState);
+		await createBid(bidState);
+	}
 	return (
 		<StyledApp>
 			<Layout>
@@ -256,7 +319,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 						theme="dark"
 						defaultSelectedKeys={[selectedView]}
 						mode="inline"
-						items={OwnerItems}
+						items={getSidebarItems()}
 						selectedKeys={[selectedView]}
 						onClick={handleMenuItemSelect}
 					/>
@@ -272,7 +335,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 						}}
 					>
 						<div style={{ fontSize: '20px', fontWeight: '700' }}>
-							{OwnerItems.filter(item => item.key === selectedView)[0].label}
+							{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
 						</div>
 						<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
 							{' '}
@@ -282,8 +345,17 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 
 					{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
 				</Layout>
-				<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
-				<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
+				<UploadModal
+					isModalOpen={isUploadModalVisible}
+					closeModal={() => setIsUploadModalVisible(false)}
+					onSubmitHandler={onCreateProjectHandler}
+					initialValues={{ name: '', description: '', budget: '0', files: [] }}
+				/>
+				<BidModal
+					isModalOpen={isBidModalVisible}
+					closeModal={() => setIsBidModalVisible(false)}
+					onSubmitHandler={onSubmitBidHandler}
+				/>
 			</Layout>
 			{!isConnected && <Login handleLogin={authenticate} />}
 		</StyledApp>
