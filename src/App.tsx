@@ -1,11 +1,10 @@
-import { MetaMaskButton, MetaMaskUIProvider } from '@metamask/sdk-react-ui';
 import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
 import { Button, Drawer, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
 import * as ethers from 'ethers';
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
+import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects, sourceUrl } from './API';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
 import ChatWrapper from './Chatting/ChatWrapper';
@@ -13,8 +12,8 @@ import Login from './Login';
 import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
-import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, LOGO, OwnerItems } from './constants';
-import { Project, UserRole } from './types';
+import { AI_BOT_PRIVATE_KEY, AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
+import { AuditReport, Project, UserRole } from './types';
 
 const { Content, Sider } = Layout;
 
@@ -272,6 +271,98 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 		console.log('res: ', res);
     };
 
+	const handleFileSubmit = async () => {
+		// Initializing the AI BOT Push user to make it able to send messages in the chat
+		//@ts-ignore
+		const aiPK = AI_BOT_PRIVATE_KEY; // channel private key (Already compromised)
+		const Pkey = `0x${aiPK}`;
+		const aiSigner = new ethers.Wallet(Pkey);
+		const aiPushUser = await PushAPI.initialize(aiSigner, { env: CONSTANTS.ENV.STAGING });
+		
+		setDrawerOpen(true);
+		const chatMsgP0 = 'AUTOMATED AUDIT REPORT:';
+		await aiPushUser.chat.send(CHAT_ID, {
+			type: 'Text',
+			content: chatMsgP0,
+		});
+		
+		const fileUrl = IPFS_FILE_URL;
+		const res = await fetch(`${sourceUrl}/api/audit-report?url=${fileUrl}`);
+		const apiRes: { data: AuditReport | null } = await res.json();
+		const report = apiRes.data;
+		console.log('apiRes: ', apiRes);
+		if (report) {
+			const chatMsgP1 = `
+				SECURITY:
+				${report.security}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP1,
+			});
+			const chatMsgP2 = `
+				FUNCTIONALITY:
+				${report.functionality}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP2,
+			});
+			const chatMsgP3 = `
+				GAS OPTIMIZATION:
+				${report.gasOptimization}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP3,
+			});
+			const chatMsgP4 = `
+				CODE QUALITY:
+				
+				${report.codeQuality}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP4,
+			});
+			const chatMsgP5 = `
+				DESIGN CONSIDERATIONS:
+				${report.designConsiderations}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP5,
+			});
+			const chatMsgP6 = `
+				COMPLIANCE AND STANDARDS:
+				${report.complianceAndStandards}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP6,
+			});
+			const chatMsgP7 = `CONCLUSION OF THE REPORT:
+				${report.conclusion}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP7,
+			});
+			const chatMsgP8 = `MY SCORE FOR YOUR REPORT: ${report.score}/10`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP8,
+			});
+			const chatMsgP9 = `MY RECOMMENDATIONS:
+				${report.recommendations.map((item, index) => `${index + 1}. ${item}\n`)}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP9,
+			});
+		}
+	};
+
 	return (
 		<React.StrictMode>
 			<StyledApp>
@@ -320,6 +411,7 @@ const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 					</Layout>
 					<UploadModal
 						isModalOpen={isUploadModalVisible}
+						handleSubmit={handleFileSubmit}
 						closeModal={() => setIsUploadModalVisible(false)}
 					/>
 					<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />

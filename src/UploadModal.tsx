@@ -8,12 +8,13 @@ const { RangePicker } = DatePicker;
 
 const UploadModal = (props: {
 	isModalOpen: boolean;
+	handleSubmit: () => void;
 	closeModal: () => void;
 }) => {
-	const { isModalOpen, closeModal } = props;
+	const { isModalOpen, closeModal, handleSubmit } = props;
 
 	const handleOk = () => {
-		closeModal();
+		handleSubmit();
 	};
 
 	const handleCancel = () => {

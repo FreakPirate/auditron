@@ -67,3 +67,15 @@ export type AuditFile = {
 	url: string;
 	uploadedDate: admin.firestore.Timestamp;
 };
+
+export type AuditReport = {
+	security: string;
+	functionality: string;
+	gasOptimization: string;
+	codeQuality: string;
+	designConsiderations: string;
+	complianceAndStandards: string;
+	conclusion: string;
+	score: string;
+	recommendations: string[];
+};

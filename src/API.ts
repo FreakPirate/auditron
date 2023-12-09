@@ -1,6 +1,6 @@
 import { Project, UserRole } from "./types";
 
-const sourceUrl = 'http://localhost:3001';
+export const sourceUrl = 'http://localhost:3001';
 // /api/active-projects/:userId/:role
 export const getActiveProjects = async (userId: string, role: UserRole): Promise<Project[]> => {
     const response = await fetch(`${sourceUrl}/api/active-projects/${userId}/${role}`);
