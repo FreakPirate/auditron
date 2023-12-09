@@ -27,14 +27,14 @@ async function seedUsers() {
 		{
 			id: 'user123',
 			safeGlobalId: 'safe123',
-			username: 'stakesholder1',
-			email: 'stakesholder1@gmail.com',
+			username: 'stakeholder1',
+			email: 'stakeholder1@gmail.com',
 			displayName: 'Stakeholder 1',
 			profilePicture: 'https://example.com/profile.jpg',
 			signUpDate: admin.firestore.Timestamp.fromDate(new Date('2023-01-01T12:00:00Z')),
 			lastLogin: admin.firestore.Timestamp.fromDate(new Date('2023-01-01T12:00:00Z')),
-			role: 'stakesholder',
-			bio: 'stakesholder1',
+			role: 'stakeholder',
+			bio: 'stakeholder1',
 		},
 		{
 			id: 'user124',
@@ -162,13 +162,7 @@ async function seedProjects() {
 	const collection = db.collection('projects');
 
 	data.forEach(async item => {
-		const stakeholderRef = db.collection('users').doc(item.stakeholderId);
-		const auditorRef = item.auditorId ? db.collection('users').doc(item.auditorId) : null;
-		await collection.doc(item.id).set({
-			...item,
-			stakeholderId: stakeholderRef,
-			auditorId: auditorRef,
-		});
+		await collection.doc(item.id).set(item);
 		console.log(`Document with ID ${item.id} added.`);
 	});
 }
@@ -237,11 +231,7 @@ async function seedAuditFiles() {
 	const collection = db.collection('auditFiles');
 
 	data.forEach(async item => {
-		const projectRef = db.collection('projects').doc(item.projectId);
-		await collection.doc(item.id).set({
-			...item,
-			projectId: projectRef,
-		});
+		await collection.doc(item.id).set(item);
 		console.log(`Document with ID ${item.id} added.`);
 	});
 }
@@ -284,13 +274,7 @@ async function seedUserBids() {
 	const collection = db.collection('userBids');
 
 	data.forEach(async item => {
-		const projectRef = db.collection('projects').doc(item.projectId);
-		const auditorRef = db.collection('users').doc(item.auditorId);
-		await collection.doc(item.id).set({
-			...item,
-			projectId: projectRef,
-			auditorId: auditorRef,
-		});
+		await collection.doc(item.id).set(item);
 		console.log(`Document with ID ${item.id} added.`);
 	});
 }

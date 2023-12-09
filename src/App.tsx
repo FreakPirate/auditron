@@ -10,7 +10,6 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import BidModal from './BidModal';
 import * as ethers from 'ethers';
 import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
-import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
