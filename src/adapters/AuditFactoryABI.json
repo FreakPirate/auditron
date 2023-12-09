@@ -1,0 +1,104 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "projectId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_auditor",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "createProject",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0xa7d97779"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "deployedProjects",
+		"outputs": [
+			{
+				"internalType": "contract AuditEscrow",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x9ec6deaf"
+	},
+	{
+		"inputs": [],
+		"name": "getDeployedProjects",
+		"outputs": [
+			{
+				"internalType": "contract AuditEscrow[]",
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x7ac3886e"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "projectId",
+				"type": "string"
+			}
+		],
+		"name": "getEscrowAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0xfa425801"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "projectToEscrow",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x14bb0b4b"
+	}
+]
