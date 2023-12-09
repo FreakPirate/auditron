@@ -1,24 +1,26 @@
-import { PushAPI, CONSTANTS } from '@pushprotocol/restapi';
+import { MetaMaskButton, MetaMaskUIProvider } from '@metamask/sdk-react-ui';
+import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
 import { Button, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
-import { useState } from 'react';
+import * as ethers from 'ethers';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
 import ChatWrapper from './Chatting/ChatWrapper';
+import Login from './Login';
 import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import { AuditorItems, CHANNEL_ADDRESS, LOGO, OwnerItems } from './constants';
-import Login from './Login';
-import * as ethers from 'ethers';
-// import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
+import { Project, UserRole } from './types';
 
 const { Content, Sider } = Layout;
 
 let signedPushUser: PushAPI;
 let signedUserWalletAddress: string;
-const App = (props: { role: string; stakeholderId: string }) => {
+const App = (props: { role: string; stakeholderId: string; userId:string }) => {
 
 	const [selectedView, setSelectedView] = useState('currReqs');
 	const [isConnected, setIsConnected] = useState(false);
@@ -27,6 +29,10 @@ const App = (props: { role: string; stakeholderId: string }) => {
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
 	const [isBidModalVisible, setIsBidModalVisible] = useState(false);
 
+	const [activeBidProjectsForStakeholder, setActiveBidProjectsforStakeholder] = useState<Project[]>([]);
+	const [activeProjects, setActiveProjects] = useState<Project[]>([]);
+	const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
+	const [activeBidProjectsForAuditor, setActiveBidProjectsForAuditor] = useState<Project[]>([]);
 	const getSidebarItems = () => {
 		switch (props.role) {
 			case 'stakeholder':
@@ -40,41 +46,162 @@ const App = (props: { role: string; stakeholderId: string }) => {
 		setSelectedView(key);
 	};
 
+	useEffect(() => {
+		if (props.role === 'stakeholder') {
+			const fetchActiveBidProjectsforStakeholder = async () => {
+				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				setActiveBidProjectsforStakeholder(activeBidProjects);
+			};
+
+			fetchActiveBidProjectsforStakeholder();
+		} else if (props.role === 'auditor') {
+			const fetchActiveBidProjectsForAuditor = async () => {
+				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				setActiveBidProjectsForAuditor(activeBidProjects);
+			};
+
+			fetchActiveBidProjectsForAuditor();
+		}
+
+		const fetchActiveProjects = async () => {
+			const activeProjects = await getActiveProjects(props.userId, props.role as UserRole);
+			setActiveProjects(activeProjects);
+		};
+
+		fetchActiveProjects();
+
+		const fetchCompletedProjects = async () => {
+			const completedProjects = await getCompletedProjects(props.userId, props.role as UserRole);
+			setCompletedProjects(completedProjects);
+		};
+
+		fetchCompletedProjects();
+	}, []);
+
+	// const getActiveBidProjectsForStakeholderUI = async () => {
+	// 	const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+	// 	return activeBidProjects;
+	// };
 	const getRightSideContent = (selectedView: string) => {
+		let rightContent = null;
 		switch (selectedView) {
-			// case 'currReqs':
-			// 	const activeBidProjects = getActiveBidProjectsForStakeholderUI();
-			// 	return (
-			// 		<CardContainer>
-			// 			<>
-			// 				{
-			// 					// @ts-ignore
-			// 					activeBidProjects.map(item => {
-			// 						<AuditRequestCard
-			// 							role={props.role}
-			// 							openBidModal={() => setIsBidModalVisible(true)}
-			// 							name={item.projectName}
-			// 							description={item.description}
-			// 							sendNotification={async () => {
-			// 								console.log('Sending notification');
-			// 								const sendNotifRes = await pushUser.channel.send(['*'], {
-			// 									notification: { title: 'This is title', body: 'This is body' },
-			// 								});
-			// 							}}
-			// 						/>;
-			// 					})
-			// 				}
-			// 			</>
-			// 		</CardContainer>
-			// 	);
+			case 'currReqs':
+				rightContent = (
+					<CardContainer>
+						<>
+							{activeBidProjectsForStakeholder?.map(item => {
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
+											});
+										}}
+										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+									/>
+								);
+							})}
+						</>
+					</CardContainer>
+				);
+				break;
+
+			case 'undergoingAudits':
+				rightContent = (
+					<CardContainer>
+						<>
+							{activeProjects?.map(item => {
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
+											});
+										}}
+										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
+									/>
+								);
+							})}
+						</>
+					</CardContainer>
+				);
+				break;
+
+			case 'completedAudits':
+				rightContent = (
+					<CardContainer>
+						<>
+							{completedProjects?.map(item => {
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
+											});
+										}}
+										src="https://media-public.canva.com/eVBaE/MAE2LjeVBaE/1/tl.png"
+									/>
+								);
+							})}
+						</>
+					</CardContainer>
+				);
+				break;
+
+			case 'availableBids':
+				rightContent = (
+					<CardContainer>
+						<>
+							{activeBidProjectsForAuditor?.map(item => {
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
+											});
+										}}
+										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+									/>
+								);
+							})}
+						</>
+					</CardContainer>
+				);
+				break;
 			case 'notifications': {
-				return <NotificationsTab signedPushUser={signedPushUser}/>;
+				rightContent = <NotificationsTab signedPushUser={signedPushUser}/>;
+				break;
 			}
 			case 'chat': {
-				return <ChatWrapper />;
+				rightContent = <ChatWrapper />;
+				break;
 			}
 			default:
-				return (
+				rightContent = (
 					<CardContainer>
 						<AuditRequestCard
 							role={props.role}
@@ -83,34 +210,37 @@ const App = (props: { role: string; stakeholderId: string }) => {
 							description={''}
 							sendNotification={async () => {
 								await sendNotification({
-									title: 'This is title for 1',
-									body: 'This is body for 1',
+									title: 'Event Triggered',
+									body: 'You have been notified regarding the click on ellipsis icon in the card',
 									recipient: [signedUserWalletAddress],
 								});
 							}}
+							src=""
 						/>
 					</CardContainer>
 				);
+				break;
 		}
+
+		return rightContent;
 	};
 
+	let rightContent = getRightSideContent(selectedView);
+
+	console.log('rightContent', rightContent);
 	// Button handler button for handling a
-    // request event for metamask
-    const authenticate = () => {
-        // Asking if metamask is already present or not
+	// request event for metamask
+	const authenticate = () => {
+		// Asking if metamask is already present or not
 		//@ts-ignore
-        if (window.ethereum) {
-            // res[0] for fetching a first wallet
+		if (window.ethereum) {
+			// res[0] for fetching a first wallet
 			//@ts-ignore
-            window.ethereum
-                .request({ method: "eth_requestAccounts" })
-                .then((res: any) =>
-                    accountChangeHandler(res[0])
-                );
-        } else {
-            alert("install metamask extension!!");
-        }
-    };
+			window.ethereum.request({ method: 'eth_requestAccounts' }).then((res: any) => accountChangeHandler(res[0]));
+		} else {
+			alert('install metamask extension!!');
+		}
+	};
 
 	// Function for getting handling all events
     const accountChangeHandler = async (account: any) => {
@@ -133,49 +263,63 @@ const App = (props: { role: string; stakeholderId: string }) => {
     };
 
 	return (
-		<StyledApp>
-			{isConnected && <>
-				<Layout>
-					<StyledSider width={250}>
-						<AppLogo className="logo">
-							<LogoWrapper src={LOGO} alt="dAd Space" />
-						</AppLogo>
-						<StyledMenu
-							theme="dark"
-							defaultSelectedKeys={[selectedView]}
-							mode="inline"
-							items={OwnerItems}
-							selectedKeys={[selectedView]}
-							onClick={handleMenuItemSelect}
-						/>
-					</StyledSider>
-					<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-						<Header
-							style={{
-								padding: '2rem',
-								background: 'transparent',
-								display: 'flex',
-								justifyContent: 'space-between',
-								alignItems: 'center',
-							}}
-						>
-							<div style={{ fontSize: '20px', fontWeight: '700' }}>
-								{OwnerItems.filter(item => item.key === selectedView)[0].label}
-							</div>
-							<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-								{' '}
-								Add new{' '}
-							</Button>
-						</Header>
+		<React.StrictMode>
+			<MetaMaskUIProvider
+				sdkOptions={{
+					dappMetadata: {
+						name: 'Auditron',
+					},
+				}}
+			>
+				<StyledApp>
+					<Layout>
+						<StyledSider width={250}>
+							<AppLogo className="logo">
+								<LogoWrapper src={LOGO} alt="dAd Space" />
+							</AppLogo>
+							<StyledMenu
+								theme="dark"
+								defaultSelectedKeys={[selectedView]}
+								mode="inline"
+								items={OwnerItems}
+								selectedKeys={[selectedView]}
+								onClick={handleMenuItemSelect}
+							/>
+						</StyledSider>
+						<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
+							<Header
+								style={{
+									padding: '2rem',
+									background: 'transparent',
+									display: 'flex',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+								}}
+							>
+								<div style={{ fontSize: '20px', fontWeight: '700' }}>
+									{OwnerItems.filter(item => item.key === selectedView)[0].label}
+								</div>
+								<div>
+									<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+										{' '}
+										Add new{' '}
+									</Button>
+									<MetaMaskButton theme={'light'} color="white"></MetaMaskButton>
+								</div>
+							</Header>
 
-						<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>
+							{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
+						</Layout>
+						<UploadModal
+							isModalOpen={isUploadModalVisible}
+							closeModal={() => setIsUploadModalVisible(false)}
+						/>
+						<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
 					</Layout>
-				</Layout>
-				<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
-				<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
-			</>}
-			{!isConnected && <Login handleLogin={authenticate}/>}
-		</StyledApp>
+					{!isConnected && <Login handleLogin={authenticate} />}
+				</StyledApp>
+			</MetaMaskUIProvider>
+		</React.StrictMode>
 	);
 };
 
