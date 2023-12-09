@@ -2,27 +2,31 @@ import React, { useState } from 'react';
 import { Tag, Layout, Menu, Tooltip, Button } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { LOGO } from './constants';
+import { AuditorItems, LOGO, OwnerItems } from './constants';
 import { Header } from 'antd/es/layout/layout';
 import UploadModal from './UploadModal';
 import AuditRequestCard from './AuditRequestCard';
 import NotificationsTab from './Notifications/NotificationsTab';
+import BidModal from './BidModal';
 
 const { Content, Sider } = Layout;
 
-const App = () => {
-	const OwnerItems = [
-		{ label: 'Current Requests', key: 'currReqs' },
-		{ label: 'Undergoing Audits', key: 'undergoingAudits' },
-		{ label: 'Completed Audits', key: 'completedAudits' },
-		{ label: 'Notifications', key: 'notifications' },
-	];
-
+const App = (props: { role: string }) => {
 	const [selectedView, setSelectedView] = useState('currReqs');
 	// const [isLoading, setIsLoading] = useState(true);
 
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+	const [isBidModalVisible, setIsBidModalVisible] = useState(false);
 
+	const getSidebarItems = () => {
+		switch (props.role) {
+			case 'owner':
+			case 'developer':
+				return OwnerItems;
+			case 'auditor':
+				return AuditorItems;
+		}
+	};
 	const handleMenuItemSelect = ({ key }: { key: string }) => {
 		setSelectedView(key);
 	};
@@ -34,16 +38,8 @@ const App = () => {
 			default:
 				return (
 					<CardContainer>
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
-						<AuditRequestCard />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)}/>
+						
 					</CardContainer>
 				);
 		}
@@ -101,6 +97,10 @@ const App = () => {
 				isModalOpen={isUploadModalVisible}
 				closeModal={() => setIsUploadModalVisible(false)}
 			/>
+      <BidModal
+				isModalOpen={isBidModalVisible}
+				closeModal={() => setIsBidModalVisible(false)}
+			/>
 		</StyledApp>
 	);
 };
@@ -110,7 +110,7 @@ export default App;
 const StyledSider = styled(Sider)`
 	height: 100vh;
 	background: #171717 !important;
-	boxshadow: 0.2px 0px #8d9093 !important;
+	box-shadow: 0.2px 0px #8d9093 !important;
 
 	.ant-layout-sider-children {
 		display: flex;

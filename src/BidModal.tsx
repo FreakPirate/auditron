@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
-import { Button, InputNumber, Modal, DatePicker } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, InputNumber, Modal } from 'antd';
 import UploadDropZone from './UploadDropZone';
 import styled from 'styled-components';
-import type { DatePickerProps, RangePickerProps } from 'antd/es/date-picker';
 
-const { RangePicker } = DatePicker;
-
-const UploadModal = (props: {
-	isModalOpen: boolean;
-	closeModal: () => void;
-}) => {
+const BidModal = (props: { isModalOpen: boolean; closeModal: () => void }) => {
 	const { isModalOpen, closeModal } = props;
 
+	// useEffect(() => {
+	// 	async function fetchData() {
+	// 		const node = await createLightNode({ defaultBootstrap: true });
+	// 		await node.start();
+	// 	}
+	// 	fetchData();
+	// }, []);
 	const handleOk = () => {
 		closeModal();
 	};
@@ -23,7 +24,7 @@ const UploadModal = (props: {
 	return (
 		<>
 			<StyledModal
-				title="Create Audit Request"
+				title="Submit your bid"
 				open={isModalOpen}
 				onOk={handleOk}
 				onCancel={handleCancel}
@@ -33,11 +34,6 @@ const UploadModal = (props: {
 					prefix="$"
 					style={{ width: '100%' }}
 				/>
-				<RangePicker
-					showTime={{ format: 'HH:mm' }}
-					format="YYYY-MM-DD HH:mm"
-				/>
-				<UploadDropZone />
 			</StyledModal>
 		</>
 	);
@@ -78,4 +74,4 @@ const StyledModal = styled(Modal)`
 	}
 `;
 
-export default UploadModal;
+export default BidModal;

@@ -3,12 +3,16 @@ import {
 	EditOutlined,
 	EllipsisOutlined,
 	CommentOutlined,
+	MoneyCollectOutlined,
 } from '@ant-design/icons';
 import { Avatar, Card } from 'antd';
 
 const { Meta } = Card;
 
-const AuditRequestCard = () => (
+const AuditRequestCard = (props: {
+	role: string;
+	openBidModal: () => void;
+}) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
 		cover={
@@ -19,7 +23,14 @@ const AuditRequestCard = () => (
 		}
 		actions={[
 			<CommentOutlined key="comment" />,
-			<EditOutlined key="edit" />,
+			props.role === 'owner' ? (
+				<EditOutlined key="edit" />
+			) : (
+				<MoneyCollectOutlined
+					key="money"
+					onClick={props.openBidModal}
+				/>
+			),
 			<EllipsisOutlined key="ellipsis" />,
 		]}
 	>
