@@ -78,4 +78,5 @@ export type AuditReport = {
 	complianceAndStandards: string;
 	conclusion: string;
 	score: string;
+	recommendations: string[];
 };
