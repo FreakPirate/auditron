@@ -10,7 +10,7 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import { AuditorItems, LOGO, OwnerItems } from './constants';
-import { getActiveBidProjectsForStakeholder, getActiveProjects } from './API';
+import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
 import { Project, UserRole } from './types';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
@@ -58,6 +58,13 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		};
 
 		fetchActiveProjects();
+
+		const fetchCompletedProjects = async () => {
+			const completedProjects = await getCompletedProjects(props.userId, props.role as UserRole);
+			setCompletedProjects(completedProjects);
+		};
+
+		fetchCompletedProjects();
 	}, []);
 
 	// const getActiveBidProjectsForStakeholderUI = async () => {
@@ -65,79 +72,95 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	// 	return activeBidProjects;
 	// };
 	const getRightSideContent = (selectedView: string) => {
+		let rightContent = null;
 		switch (selectedView) {
 			case 'currReqs':
-				return (
+				rightContent = (
 					<CardContainer>
 						<>
 							{activeBidProjectsForStakeholder?.map(item => {
-								<AuditRequestCard
-									role={props.role}
-									openBidModal={() => setIsBidModalVisible(true)}
-									name={item.projectName}
-									description={item.description}
-									sendNotification={async () => {
-										console.log('Sending notification');
-										const sendNotifRes = await pushUser.channel.send(['*'], {
-											notification: { title: 'This is title', body: 'This is body' },
-										});
-									}}
-								/>;
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											console.log('Sending notification');
+											const sendNotifRes = await pushUser.channel.send(['*'], {
+												notification: { title: 'This is title', body: 'This is body' },
+											});
+										}}
+										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+									/>
+								);
 							})}
 						</>
 					</CardContainer>
 				);
+				break;
+
 			case 'undergoingAudits':
-				return (
+				rightContent = (
 					<CardContainer>
 						<>
 							{activeProjects?.map(item => {
-								<AuditRequestCard
-									role={props.role}
-									openBidModal={() => setIsBidModalVisible(true)}
-									name={item.projectName}
-									description={item.description}
-									sendNotification={async () => {
-										console.log('Sending notification');
-										const sendNotifRes = await pushUser.channel.send(['*'], {
-											notification: { title: 'This is title', body: 'This is body' },
-										});
-									}}
-								/>;
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											console.log('Sending notification');
+											const sendNotifRes = await pushUser.channel.send(['*'], {
+												notification: { title: 'This is title', body: 'This is body' },
+											});
+										}}
+										src='https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png'
+									/>
+								);
 							})}
 						</>
 					</CardContainer>
 				);
+				break;
 
 			case 'completedAudits':
-				return (
+				rightContent = (
 					<CardContainer>
 						<>
 							{completedProjects?.map(item => {
-								<AuditRequestCard
-									role={props.role}
-									openBidModal={() => setIsBidModalVisible(true)}
-									name={item.projectName}
-									description={item.description}
-									sendNotification={async () => {
-										const sendNotifRes = await pushUser.channel.send(['*'], {
-											notification: { title: 'This is title', body: 'This is body' },
-										});
-									}}
-								/>;
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											const sendNotifRes = await pushUser.channel.send(['*'], {
+												notification: { title: 'This is title', body: 'This is body' },
+											});
+										}}
+										src='https://media-public.canva.com/eVBaE/MAE2LjeVBaE/1/tl.png'
+									/>
+								);
 							})}
 						</>
 					</CardContainer>
 				);
+				break;
 
 			case 'notifications': {
-				return <NotificationsTab pushUser={pushUser} />;
+				rightContent = <NotificationsTab pushUser={pushUser} />;
+				break;
 			}
 			case 'chat': {
-				return <ChatWrapper pushUser={pushUser} />;
+				rightContent = <ChatWrapper pushUser={pushUser} />;
+				break;
 			}
 			default:
-				return (
+				rightContent = (
 					<CardContainer>
 						<AuditRequestCard
 							role={props.role}
@@ -151,11 +174,19 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 									recipient: ['*'],
 								});
 							}}
+							src=''
 						/>
 					</CardContainer>
 				);
+				break;
 		}
+
+		return rightContent;
 	};
+
+	let rightContent = getRightSideContent(selectedView);
+
+	console.log('rightContent', rightContent);
 
 	return (
 		<StyledApp>
@@ -192,7 +223,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 						</Button>
 					</Header>
 
-					{<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>}
+					{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
 				</Layout>
 			</Layout>
 			<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />

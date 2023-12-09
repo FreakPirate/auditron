@@ -10,13 +10,14 @@ const AuditRequestCard = (props: {
 	name: string;
 	description: string;
 	sendNotification: () => void;
+	src: string;
 }) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
 		cover={
 			<img
 				alt="example"
-				src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+				src={props.src}
 			/>
 		}
 		actions={[
