@@ -6,6 +6,7 @@ import { LOGO } from './constants';
 import { Header } from 'antd/es/layout/layout';
 import UploadModal from './UploadModal';
 import AuditRequestCard from './AuditRequestCard';
+import NotificationsTab from './Notifications/NotificationsTab';
 
 const { Content, Sider } = Layout;
 
@@ -28,6 +29,8 @@ const App = () => {
 
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
+			case 'notifications':
+				return <NotificationsTab />;
 			default:
 				return (
 					<CardContainer>
