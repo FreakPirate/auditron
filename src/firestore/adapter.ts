@@ -1,5 +1,14 @@
 import * as admin from 'firebase-admin';
-import { User, UserRole, AuditorStatus, AuditStatus, Project, Bid, AuditFile, ProjectWithAuditorBid } from './types'; // Import your types here
+import {
+	User,
+	UserRole,
+	AuditorStatus,
+	AuditStatus,
+	Project,
+	UserBid,
+	AuditFile,
+	ProjectWithAuditorBid,
+} from './types'; // Import your types here
 const serviceAccount = require('../../firebase.json');
 
 admin.initializeApp({
@@ -42,9 +51,9 @@ export const getActiveBidProjectsForStakeholder = async (stakeholderId: string):
 };
 
 // Get list of bids for a project
-export const getBidsForProject = async (projectId: string): Promise<Bid[]> => {
+export const getBidsForProject = async (projectId: string): Promise<UserBid[]> => {
 	const bidsSnapshot = await db.collection('bids').where('projectId', '==', projectId).get();
-	return bidsSnapshot.docs.map(doc => doc.data() as Bid);
+	return bidsSnapshot.docs.map(doc => doc.data() as UserBid);
 };
 
 // Get list of available bid projects for an auditor along with the ones they have already bid on
@@ -53,7 +62,7 @@ export const getAvailableBidProjectsForAuditor = async (auditorId: string): Prom
 	const bidsSnapshot = await db.collection('bids').where('auditorId', '==', auditorId).get();
 
 	const projects = projectsSnapshot.docs.map(doc => doc.data() as Project);
-	const bids = bidsSnapshot.docs.map(doc => doc.data() as Bid);
+	const bids = bidsSnapshot.docs.map(doc => doc.data() as UserBid);
 
 	const projectWithAuditorBid: ProjectWithAuditorBid[] = projects.map(project => {
 		const bid = bids.find(bid => bid.projectId === project.id && bid.auditorId === auditorId);
@@ -72,7 +81,7 @@ export const createNewProject = async (newProject: Project): Promise<void> => {
 };
 
 // Create new bid
-export const createNewBid = async (newBid: Bid): Promise<void> => {
+export const createNewBid = async (newBid: UserBid): Promise<void> => {
 	await db.collection('bids').doc(newBid.id).set(newBid);
 };
 
@@ -104,4 +113,13 @@ export const createNewUser = async (newUser: User): Promise<void> => {
 // Create new audit file
 export const createNewAuditFile = async (newAuditFile: AuditFile): Promise<void> => {
 	await db.collection('auditFiles').doc(newAuditFile.id).set(newAuditFile);
+};
+
+// Logic to assign auditor with lowest bid to project once bidding is complete
+export const assignAuditorToProject = async (projectId: string): Promise<void> => {
+	const bidsSnapshot = await db.collection('bids').where('projectId', '==', projectId).get();
+	const bids = bidsSnapshot.docs.map(doc => doc.data() as UserBid);
+
+	const lowestBid = bids.reduce((prev, curr) => (prev.bidAmount < curr.bidAmount ? prev : curr));
+	await db.collection('projects').doc(projectId).update({ auditorId: lowestBid.auditorId });
 };

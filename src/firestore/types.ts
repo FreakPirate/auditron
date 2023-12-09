@@ -50,7 +50,7 @@ export type ProjectWithAuditorBid = Project & {
 	auditorBid: number | null;
 };
 
-export type Bid = {
+export type UserBid = {
 	id: string;
 	projectId: string;
 	auditorId: string;
