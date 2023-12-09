@@ -14,10 +14,11 @@ const NotificationsTab = (props: Props) => {
 	
 	useEffect(() => {
 		const fetchNotifications = async () => {
-
-			const inboxNotifications = await pushUser.notification.list("INBOX");
-			console.log('inboxNotifications: ', inboxNotifications);
-			setNotificationsList(inboxNotifications);
+			if (pushUser) {
+				const inboxNotifications = await pushUser.notification.list("INBOX");
+				console.log('inboxNotifications: ', inboxNotifications);
+				setNotificationsList(inboxNotifications);
+			}
 		};
 		fetchNotifications();
 	}, [pushUser]);
