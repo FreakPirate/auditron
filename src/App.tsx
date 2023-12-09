@@ -51,6 +51,13 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			};
 
 			fetchActiveBidProjectsforStakeholder();
+		} else if (props.role === 'auditor') {
+			const fetchActiveBidProjectsForAuditor = async () => {
+				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				setActiveBidProjectsForAuditor(activeBidProjects);
+			};
+
+			fetchActiveBidProjectsForAuditor();
 		}
 
 		const fetchActiveProjects = async () => {
@@ -152,6 +159,31 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 				);
 				break;
 
+			case 'availableBids':
+				rightContent = (
+					<CardContainer>
+						<>
+							{activeBidProjectsForAuditor?.map(item => {
+								return (
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+										sendNotification={async () => {
+											console.log('Sending notification');
+											const sendNotifRes = await pushUser.channel.send(['*'], {
+												notification: { title: 'This is title', body: 'This is body' },
+											});
+										}}
+										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+									/>
+								);
+							})}
+						</>
+					</CardContainer>
+				);
+				break;
 			case 'notifications': {
 				rightContent = <NotificationsTab pushUser={pushUser} />;
 				break;
