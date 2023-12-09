@@ -1,5 +1,5 @@
 import React from 'react';
-import { EditOutlined, EllipsisOutlined, CommentOutlined, MoneyCollectOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, EllipsisOutlined, CommentOutlined, MoneyCollectOutlined } from '@ant-design/icons';
 import { Avatar, Card } from 'antd';
 
 const { Meta } = Card;
@@ -12,6 +12,7 @@ const AuditRequestCard = (props: {
 	sendNotification: () => void;
 	src: string;
 	showDrawer: () => void;
+	showBids?: () => void;
 }) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
@@ -23,8 +24,8 @@ const AuditRequestCard = (props: {
 		}
 		actions={[
 			<CommentOutlined key="comment" onClick={props.showDrawer}/>,
-			props.role === 'owner' ? (
-				<EditOutlined key="edit" />
+			props.role === 'stakeholder' ? (
+				<InfoCircleOutlined key="info"  onClick={props.showBids}/>
 			) : (
 				<MoneyCollectOutlined key="money" onClick={props.openBidModal} />
 			),

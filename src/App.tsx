@@ -12,16 +12,19 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import {
+	assignAuditor,
 	createAuditFile,
 	createBid,
 	createProject,
 	getActiveBidProjectsForStakeholder,
 	getActiveProjects,
 	getAvailableBidProjectsForAuditor,
+	getBidsForProject,
 	getCompletedProjects,
 } from './API';
 import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, LOGO, OwnerItems } from './constants';
-import { AuditorStatus, Project, UserRole, AuditStatus } from './types';
+import { AuditorStatus, Project, UserRole, AuditStatus, UserBid } from './types';
+import AllBidsModal from './AllBidsModal';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -29,7 +32,7 @@ const { Content, Sider } = Layout;
 let signedPushUser: PushAPI;
 let signedUserWalletAddress: string;
 const App = (props: { role: string; stakeholderId: string; userId: string }) => {
-	const [selectedView, setSelectedView] = useState('undergoingAudits');
+	const [selectedView, setSelectedView] = useState('currReqs');
 	const [isConnected, setIsConnected] = useState(false);
 	const [open, setDrawerOpen] = useState(false);
 	const [sendNotification] = useSendNotifications();
@@ -43,6 +46,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	const [activeBidProjectsForAuditor, setActiveBidProjectsForAuditor] = useState<Project[]>([]);
 
 	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+	const [isAllBidsModalVisible, setIsAllBidsModalVisible] = useState(false);
+	const [allBids, setAllBids] = useState<UserBid[]>([]);
+
 	const getSidebarItems = () => {
 		switch (props.role) {
 			case 'stakeholder':
@@ -63,6 +70,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	const onClose = () => {
 		setDrawerOpen(false);
 	};
+
+	useEffect(() => {
+		const fetchData = async () => {
+			const bids = await getBidsForProject(selectedProject?.id!);
+			setAllBids(bids);
+		};
+		fetchData();
+	}, [selectedProject]);
 
 	useEffect(() => {
 		if (props.role === 'stakeholder') {
@@ -127,6 +142,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 											});
 										}}
 										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
+										showBids={() => {
+											setSelectedProject(item);
+											setIsAllBidsModalVisible(true);
+										}}
 									/>
 								);
 							})}
@@ -144,7 +163,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 									<AuditRequestCard
 										role={props.role}
 										showDrawer={showDrawer}
-										openBidModal={() => setIsBidModalVisible(true)}
+										openBidModal={() => {
+											setSelectedProject(item);
+											setIsBidModalVisible(true);
+										}}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
@@ -172,7 +194,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 									<AuditRequestCard
 										role={props.role}
 										showDrawer={showDrawer}
-										openBidModal={() => setIsBidModalVisible(true)}
+										openBidModal={() => {
+											setSelectedProject(item);
+											setIsBidModalVisible(true);
+										}}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
@@ -200,7 +225,10 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 									<AuditRequestCard
 										role={props.role}
 										showDrawer={showDrawer}
-										openBidModal={() => setIsBidModalVisible(true)}
+										openBidModal={() => {
+											setSelectedProject(item);
+											setIsBidModalVisible(true);
+										}}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
@@ -304,8 +332,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		console.log('projectState', projectState);
 		await createProject(projectState);
 		setActiveBidProjectsforStakeholder([...activeBidProjectsForStakeholder, projectState]);
-		// TODO
-		// await createAuditFile('https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J');
+		await createAuditFile({
+			id: generateId(),
+			projectId: selectedProject?.id!,
+			filename: 'test',
+			fileType: 'solidity',
+			ipfsHash: 'test123',
+			url: 'https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J',
+		});
 
 		// 	stakeholderId: string;
 		// description: string;
@@ -336,6 +370,17 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		console.log('bidState', bidState);
 		await createBid(bidState);
 	};
+
+	const showBids = () => {
+		setIsAllBidsModalVisible(true);
+	};
+
+	const onBidSelect = async (projectId: string, id: string) => {
+		setIsAllBidsModalVisible(false);
+		await assignAuditor(projectId, id);
+		showDrawer()
+	};
+
 	return (
 		<StyledApp>
 			{isConnected && (
@@ -398,6 +443,13 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 						isModalOpen={isBidModalVisible}
 						closeModal={() => setIsBidModalVisible(false)}
 						onSubmitHandler={onSubmitBidHandler}
+					/>
+					<AllBidsModal
+						isModalOpen={isAllBidsModalVisible}
+						closeModal={() => setIsAllBidsModalVisible(false)}
+						projectId={selectedProject?.id!}
+						onSubmitHandler={onBidSelect}
+						bids={allBids}
 					/>
 				</Layout>
 			)}

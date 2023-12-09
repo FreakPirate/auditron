@@ -8,9 +8,7 @@ import { theme } from 'antd';
 
 const { darkAlgorithm, compactAlgorithm } = theme;
 
-const root = ReactDOM.createRoot(
-	document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
 	<React.StrictMode>
 		<ConfigProvider
@@ -22,9 +20,9 @@ root.render(
 				algorithm: [darkAlgorithm, compactAlgorithm],
 			}}
 		>
-			<App role="auditor" stakeholderId='user124' userId='user124'/>
+			<App role="stakeholder" stakeholderId="user123" userId="user123" />
 		</ConfigProvider>
-	</React.StrictMode>
+	</React.StrictMode>,
 );
 
 // If you want to start measuring performance in your app, pass a function

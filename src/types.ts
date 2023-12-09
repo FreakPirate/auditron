@@ -62,5 +62,4 @@ export type AuditFile = {
 	fileType: string;
 	ipfsHash: string;
 	url: string;
-	uploadedDate: admin.firestore.Timestamp;
 };

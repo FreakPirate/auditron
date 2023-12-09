@@ -118,6 +118,7 @@ app.get('/api/bids/project/:projectId', async (req: Request, res: Response) => {
 	try {
 		const projectId = req.params.projectId as string;
 		const bids = await getBidsForProject(projectId);
+		console.log('bids', bids);
 		res.status(200).json({
 			data: bids,
 		});
@@ -207,11 +208,13 @@ app.patch('/api/project/auditor/:projectId', async (req: Request, res: Response)
 	try {
 		const projectId = req.params.projectId as string;
 		const auditorId = req.body.auditorId;
+		console.log('projectId', projectId, 'auditorId', auditorId);
 		updateProjectAuditorId(projectId, auditorId);
 		res.status(200).json({
 			message: 'Project auditor ID updated successfully',
 		});
 	} catch (error) {
+		console.log('Error updating project AI audit status', error);
 		res.status(500).json({ message: error });
 	}
 });
@@ -261,7 +264,6 @@ app.get('/api/estimated-gas', async (req: Request, res: Response) => {
 				Authorization: `Basic ${InfuraAuth}`,
 			},
 		});
-		console.log('Suggested gas fees:', data);
 		return res.status(200).json(data);
 	} catch (error) {
 		console.log('Server responded with:', error);
