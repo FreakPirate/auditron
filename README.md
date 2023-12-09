@@ -1,46 +1,31 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# AI-Enabled Smart Contract Auditor
 
-## Available Scripts
+![Project Logo](https://rocketium.com/images/v2/5ee1a13c9855283dbe2269f2/original/0f736fbd-5f0a-47af-ab0c-0db4c779675d_1702048266746.png)
 
-In the project directory, you can run:
+## Overview
 
-### `npm start`
+The AI-Enabled Smart Contract Auditor is a sophisticated tool engineered to fortify the security and reliability of smart contracts within blockchain networks. By seamlessly integrating advanced technologies such as Push protocol, MetaMask, and the Linea AI Engine, this auditor empowers developers and auditors with a comprehensive solution for identifying and addressing potential vulnerabilities and security risks in smart contracts.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Features
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- **Push Protocol Integration:** The auditor seamlessly integrates with the Push protocol, providing a real-time communication channel for updates and notifications. This ensures that developers and auditors receive timely alerts regarding any critical security events, allowing for swift responses and mitigation.
 
-### `npm test`
+- **MetaMask Support:** The user interface is designed for a seamless experience with MetaMask. Users can easily authenticate and process transactions securely through the MetaMask extension, ensuring a user-friendly yet robust interaction with the auditing platform.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Linea AI Engine:** At the core of the auditor lies the Linea AI Engine, an advanced artificial intelligence system specifically trained to perform in-depth analysis of smart contracts. Leveraging machine learning techniques, Linea identifies vulnerabilities, code smells, and potential security issues, providing a thorough assessment of the smart contract's security posture.
 
-### `npm run build`
+- **Automated Auditing:** Streamline the auditing process with automated scans powered by Linea. The auditor conducts comprehensive analyses of smart contracts, generating detailed reports that highlight potential security threats and areas for improvement. Automation accelerates the auditing workflow, enabling developers to focus on implementing secure coding practices.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Customizable Alerts:** Tailor the notification system according to your preferences. Customize alert thresholds and receive notifications through various channels, ensuring that you stay informed about critical security events as they unfold.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Interactive Reports:** The auditor generates interactive and user-friendly reports, allowing developers and auditors to explore identified issues in-depth. Reports include actionable insights and recommendations for addressing security concerns, facilitating an efficient remediation process.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Getting Started
 
-### `npm run eject`
+### Prerequisites
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- [Node.js](https://nodejs.org/) installed
+- MetaMask extension installed in your browser
+- Access to Push protocol for real-time notifications
+- Linea AI Engine API key (Contact [Linea](https://linea.ai/) for access)
