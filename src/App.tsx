@@ -115,6 +115,11 @@ const App = (props: { role: string; stakeholderId: string }) => {
         // Setting an address data
 		setIsConnected(true);
 		console.log('Account: ', account);
+
+		// TODO:
+		// Add the user to the notification channel
+		// and store the pushUser object in the state
+		// Build a logout button to setIsConnected(false)
     };
 
 	return (
