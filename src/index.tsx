@@ -16,13 +16,13 @@ root.render(
 		<ConfigProvider
 			theme={{
 				token: {
-          "colorPrimary": "#5274FF",
-          "colorInfo": "#5274FF"
+					colorPrimary: '#5274FF',
+					colorInfo: '#5274FF',
 				},
 				algorithm: [darkAlgorithm, compactAlgorithm],
 			}}
 		>
-			<App />
+			<App role="auditor" />
 		</ConfigProvider>
 	</React.StrictMode>
 );
