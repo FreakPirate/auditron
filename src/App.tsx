@@ -1,7 +1,7 @@
 import { PushAPI } from '@pushprotocol/restapi';
 import { Button, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
@@ -10,13 +10,14 @@ import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
 import { AuditorItems, LOGO, OwnerItems } from './constants';
+import { getActiveBidProjectsForStakeholder, getActiveProjects } from './API';
+import { Project, UserRole } from './types';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
 let pushUser: PushAPI;
-const App = (props: { role: string; stakeholderId: string }) => {
-
+const App = (props: { role: string; stakeholderId: string; userId: string }) => {
 	const [selectedView, setSelectedView] = useState('currReqs');
 	const [sendNotification] = useSendNotifications();
 	// const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +25,10 @@ const App = (props: { role: string; stakeholderId: string }) => {
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
 	const [isBidModalVisible, setIsBidModalVisible] = useState(false);
 
+	const [activeBidProjectsForStakeholder, setActiveBidProjectsforStakeholder] = useState<Project[]>([]);
+	const [activeProjects, setActiveProjects] = useState<Project[]>([]);
+	const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
+	const [activeBidProjectsForAuditor, setActiveBidProjectsForAuditor] = useState<Project[]>([]);
 	const getSidebarItems = () => {
 		switch (props.role) {
 			case 'stakeholder':
@@ -37,42 +42,99 @@ const App = (props: { role: string; stakeholderId: string }) => {
 		setSelectedView(key);
 	};
 
+	useEffect(() => {
+		if (props.role === 'stakeholder') {
+			const fetchActiveBidProjectsforStakeholder = async () => {
+				const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+				setActiveBidProjectsforStakeholder(activeBidProjects);
+			};
+
+			fetchActiveBidProjectsforStakeholder();
+		}
+
+		const fetchActiveProjects = async () => {
+			const activeProjects = await getActiveProjects(props.userId, props.role as UserRole);
+			setActiveProjects(activeProjects);
+		};
+
+		fetchActiveProjects();
+	}, []);
+
 	// const getActiveBidProjectsForStakeholderUI = async () => {
 	// 	const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
 	// 	return activeBidProjects;
 	// };
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
-			// case 'currReqs':
-			// 	const activeBidProjects = getActiveBidProjectsForStakeholderUI();
-			// 	return (
-			// 		<CardContainer>
-			// 			<>
-			// 				{
-			// 					// @ts-ignore
-			// 					activeBidProjects.map(item => {
-			// 						<AuditRequestCard
-			// 							role={props.role}
-			// 							openBidModal={() => setIsBidModalVisible(true)}
-			// 							name={item.projectName}
-			// 							description={item.description}
-			// 							sendNotification={async () => {
-			// 								console.log('Sending notification');
-			// 								const sendNotifRes = await pushUser.channel.send(['*'], {
-			// 									notification: { title: 'This is title', body: 'This is body' },
-			// 								});
-			// 							}}
-			// 						/>;
-			// 					})
-			// 				}
-			// 			</>
-			// 		</CardContainer>
-			// 	);
+			case 'currReqs':
+				return (
+					<CardContainer>
+						<>
+							{activeBidProjectsForStakeholder?.map(item => {
+								<AuditRequestCard
+									role={props.role}
+									openBidModal={() => setIsBidModalVisible(true)}
+									name={item.projectName}
+									description={item.description}
+									sendNotification={async () => {
+										console.log('Sending notification');
+										const sendNotifRes = await pushUser.channel.send(['*'], {
+											notification: { title: 'This is title', body: 'This is body' },
+										});
+									}}
+								/>;
+							})}
+						</>
+					</CardContainer>
+				);
+			case 'undergoingAudits':
+				return (
+					<CardContainer>
+						<>
+							{activeProjects?.map(item => {
+								<AuditRequestCard
+									role={props.role}
+									openBidModal={() => setIsBidModalVisible(true)}
+									name={item.projectName}
+									description={item.description}
+									sendNotification={async () => {
+										console.log('Sending notification');
+										const sendNotifRes = await pushUser.channel.send(['*'], {
+											notification: { title: 'This is title', body: 'This is body' },
+										});
+									}}
+								/>;
+							})}
+						</>
+					</CardContainer>
+				);
+
+			case 'completedAudits':
+				return (
+					<CardContainer>
+						<>
+							{completedProjects?.map(item => {
+								<AuditRequestCard
+									role={props.role}
+									openBidModal={() => setIsBidModalVisible(true)}
+									name={item.projectName}
+									description={item.description}
+									sendNotification={async () => {
+										const sendNotifRes = await pushUser.channel.send(['*'], {
+											notification: { title: 'This is title', body: 'This is body' },
+										});
+									}}
+								/>;
+							})}
+						</>
+					</CardContainer>
+				);
+
 			case 'notifications': {
 				return <NotificationsTab pushUser={pushUser} />;
 			}
 			case 'chat': {
-				return <ChatWrapper pushUser={pushUser}/>;
+				return <ChatWrapper pushUser={pushUser} />;
 			}
 			default:
 				return (
@@ -130,7 +192,7 @@ const App = (props: { role: string; stakeholderId: string }) => {
 						</Button>
 					</Header>
 
-					<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>
+					{<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>}
 				</Layout>
 			</Layout>
 			<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />

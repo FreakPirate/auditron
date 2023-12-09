@@ -3,15 +3,15 @@ export const LOGO =
 
 export const OwnerItems = [
 	{ label: 'Current Requests', key: 'currReqs' },
-	{ label: 'Undergoing Audits', key: 'undergoingAuditsOwner' },
-	{ label: 'Completed Audits', key: 'completedAuditsOwner' },
+	{ label: 'Undergoing Audits', key: 'undergoingAudits' },
+	{ label: 'Completed Audits', key: 'completedAudits' },
 	{ label: 'Notifications', key: 'notifications' },
 	{ label: 'Chattu', key: 'chat' },
 ];
 export const AuditorItems = [
     { label: 'Available bids', key: 'availableBids' },
-    { label: 'Undergoing Audits', key: 'undergoingAuditsAuditor' },
-    { label: 'Completed Audits', key: 'completedAuditsAuditor' },
+    { label: 'Undergoing Audits', key: 'undergoingAudits' },
+    { label: 'Completed Audits', key: 'completedAudits' },
     { label: 'Notifications', key: 'notifications' },
 	{ label: 'Chattu', key: 'chat' },
 ];
