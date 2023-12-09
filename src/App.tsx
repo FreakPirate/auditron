@@ -13,6 +13,10 @@ import { AuditorItems, LOGO, OwnerItems } from './constants';
 import { getActiveBidProjectsForStakeholder, getActiveProjects, getCompletedProjects } from './API';
 import { Project, UserRole } from './types';
 import Login from './Login';
+import { MetaMaskProvider } from '@metamask/sdk-react';
+import { useSDK } from '@metamask/sdk-react';
+import { MetaMaskUIProvider, MetaMaskButton } from '@metamask/sdk-react-ui';
+import React from 'react';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -245,48 +249,65 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		// and store the pushUser object in the state
 		// Build a logout button to setIsConnected(false)
 	};
-	return (
-		<StyledApp>
-			<Layout>
-				<StyledSider width={250}>
-					<AppLogo className="logo">
-						<LogoWrapper src={LOGO} alt="dAd Space" />
-					</AppLogo>
-					<StyledMenu
-						theme="dark"
-						defaultSelectedKeys={[selectedView]}
-						mode="inline"
-						items={OwnerItems}
-						selectedKeys={[selectedView]}
-						onClick={handleMenuItemSelect}
-					/>
-				</StyledSider>
-				<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-					<Header
-						style={{
-							padding: '2rem',
-							background: 'transparent',
-							display: 'flex',
-							justifyContent: 'space-between',
-							alignItems: 'center',
-						}}
-					>
-						<div style={{ fontSize: '20px', fontWeight: '700' }}>
-							{OwnerItems.filter(item => item.key === selectedView)[0].label}
-						</div>
-						<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-							{' '}
-							Add new{' '}
-						</Button>
-					</Header>
 
-					{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
-				</Layout>
-				<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
-				<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
-			</Layout>
-			{!isConnected && <Login handleLogin={authenticate} />}
-		</StyledApp>
+	return (
+		<React.StrictMode>
+			<MetaMaskUIProvider
+				sdkOptions={{
+					dappMetadata: {
+						name: 'Auditron',
+					},
+				}}
+			>
+				<StyledApp>
+					<Layout>
+						<StyledSider width={250}>
+							<AppLogo className="logo">
+								<LogoWrapper src={LOGO} alt="dAd Space" />
+							</AppLogo>
+							<StyledMenu
+								theme="dark"
+								defaultSelectedKeys={[selectedView]}
+								mode="inline"
+								items={OwnerItems}
+								selectedKeys={[selectedView]}
+								onClick={handleMenuItemSelect}
+							/>
+						</StyledSider>
+						<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
+							<Header
+								style={{
+									padding: '2rem',
+									background: 'transparent',
+									display: 'flex',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+								}}
+							>
+								<div style={{ fontSize: '20px', fontWeight: '700' }}>
+									{OwnerItems.filter(item => item.key === selectedView)[0].label}
+								</div>
+								<div>
+									<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+										{' '}
+										Add new{' '}
+									</Button>
+									<MetaMaskButton theme={'light'} color="white"></MetaMaskButton>
+								</div>
+							</Header>
+
+							{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
+						</Layout>
+						<UploadModal
+							isModalOpen={isUploadModalVisible}
+							closeModal={() => setIsUploadModalVisible(false)}
+						/>
+						<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
+					</Layout>
+					{!isConnected && <Login handleLogin={authenticate} />}
+				</StyledApp>
+			</MetaMaskUIProvider>
+		</React.StrictMode>
 	);
 };
 
