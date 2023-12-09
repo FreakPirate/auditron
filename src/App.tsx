@@ -21,10 +21,11 @@ import {
 	getAvailableBidProjectsForAuditor,
 	getBidsForProject,
 	getCompletedProjects,
+	sourceUrl,
 } from './API';
-import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, LOGO, OwnerItems } from './constants';
-import { AuditorStatus, Project, UserRole, AuditStatus, UserBid } from './types';
+import { AuditorStatus, Project, UserRole, AuditStatus, UserBid, AuditReport } from './types';
 import AllBidsModal from './AllBidsModal';
+import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -313,6 +314,98 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			`${CHANNEL_ADDRESS}`, // channel address in CAIP format
 		);
 		console.log('res: ', res);
+    };
+
+	const sendReportToGroupChat = async () => {
+		// Initializing the AI BOT Push user to make it able to send messages in the chat
+		//@ts-ignore
+		const aiPK = AI_BOT_PRIVATE_KEY; // channel private key (Already compromised)
+		const Pkey = `0x${aiPK}`;
+		const aiSigner = new ethers.Wallet(Pkey);
+		const aiPushUser = await PushAPI.initialize(aiSigner, { env: CONSTANTS.ENV.STAGING });
+		
+		setDrawerOpen(true);
+		const chatMsgP0 = 'AUTOMATED AUDIT REPORT:';
+		await aiPushUser.chat.send(CHAT_ID, {
+			type: 'Text',
+			content: chatMsgP0,
+		});
+		
+		const fileUrl = IPFS_FILE_URL;
+		const res = await fetch(`${sourceUrl}/api/audit-report?url=${fileUrl}`);
+		const apiRes: { data: AuditReport | null } = await res.json();
+		const report = apiRes.data;
+		console.log('apiRes: ', apiRes);
+		if (report) {
+			const chatMsgP1 = `
+				SECURITY:
+				${report.security}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP1,
+			});
+			const chatMsgP2 = `
+				FUNCTIONALITY:
+				${report.functionality}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP2,
+			});
+			const chatMsgP3 = `
+				GAS OPTIMIZATION:
+				${report.gasOptimization}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP3,
+			});
+			const chatMsgP4 = `
+				CODE QUALITY:
+				
+				${report.codeQuality}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP4,
+			});
+			const chatMsgP5 = `
+				DESIGN CONSIDERATIONS:
+				${report.designConsiderations}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP5,
+			});
+			const chatMsgP6 = `
+				COMPLIANCE AND STANDARDS:
+				${report.complianceAndStandards}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP6,
+			});
+			const chatMsgP7 = `CONCLUSION OF THE REPORT:
+				${report.conclusion}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP7,
+			});
+			const chatMsgP8 = `MY SCORE FOR YOUR REPORT: ${report.score}/10`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP8,
+			});
+			const chatMsgP9 = `MY RECOMMENDATIONS:
+				${report.recommendations.map((item, index) => `${index + 1}. ${item}\n`)}
+			`;
+			await aiPushUser.chat.send(CHAT_ID, {
+				type: 'Text',
+				content: chatMsgP9,
+			});
+		}
 	};
 
 	const onCreateProjectHandler = async (values: any) => {
@@ -340,6 +433,9 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			ipfsHash: 'test123',
 			url: 'https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J',
 		});
+		await sendReportToGroupChat();
+		// TODO
+		// await createAuditFile('https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J');
 
 		// 	stakeholderId: string;
 		// description: string;

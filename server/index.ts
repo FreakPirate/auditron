@@ -64,9 +64,9 @@ app.post('/file/upload', upload.single('file'), async (req, res) => {
 	return res.status(200).json({ ...pinataRes, url: fileUrl });
 });
 
-app.get('/api/audit-report/:fileUrl', async (req: Request, res: Response) => {
+app.get('/api/audit-report', async (req: Request, res: Response) => {
 	try {
-		const fileUrl = req.params.fileUrl as string;
+		const fileUrl = req.query.url as string;
 		const auditReport = await generateAuditReport(fileUrl);
 		res.status(200).json({
 			data: auditReport,

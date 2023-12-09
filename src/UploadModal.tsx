@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
-import { Button, InputNumber, Modal, DatePicker, Typography, Input } from 'antd';
-import UploadDropZone from './UploadDropZone';
-import styled from 'styled-components';
-import type { DatePickerProps, RangePickerProps } from 'antd/es/date-picker';
+import { DatePicker, Input, Modal } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { useFormik } from 'formik';
+import { useState } from 'react';
+import styled from 'styled-components';
+import UploadDropZone from './UploadDropZone';
 
 const { RangePicker } = DatePicker;
 
 const UploadModal = (props: {
 	isModalOpen: boolean;
+	initialValues: { name: string; description: string; budget: string; files: any };
 	closeModal: () => void;
 	onSubmitHandler: (values: { [key: string]: any }) => void;
-	initialValues: { name: string; description: string; budget: string; files: any };
 }) => {
 	const { isModalOpen, closeModal, onSubmitHandler, initialValues } = props;
 	const formikForm = useFormik({
