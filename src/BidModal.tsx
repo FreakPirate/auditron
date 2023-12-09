@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Button, InputNumber, Modal } from 'antd';
 import UploadDropZone from './UploadDropZone';
 import styled from 'styled-components';
-import { createLightNode } from '@waku/sdk';
 
 const BidModal = (props: { isModalOpen: boolean; closeModal: () => void }) => {
 	const { isModalOpen, closeModal } = props;
