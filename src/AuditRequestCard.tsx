@@ -11,6 +11,7 @@ const AuditRequestCard = (props: {
 	description: string;
 	sendNotification: () => void;
 	src: string;
+	showDrawer: () => void;
 }) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
@@ -21,7 +22,7 @@ const AuditRequestCard = (props: {
 			/>
 		}
 		actions={[
-			<CommentOutlined key="comment" />,
+			<CommentOutlined key="comment" onClick={props.showDrawer}/>,
 			props.role === 'owner' ? (
 				<EditOutlined key="edit" />
 			) : (
