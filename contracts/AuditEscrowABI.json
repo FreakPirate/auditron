@@ -1,0 +1,126 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_auditor",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "amount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0xaa8c217c"
+	},
+	{
+		"inputs": [],
+		"name": "auditComplete",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x62d36b8c"
+	},
+	{
+		"inputs": [],
+		"name": "auditor",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x3ec045a6"
+	},
+	{
+		"inputs": [],
+		"name": "completeAudit",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0x7f2a1731"
+	},
+	{
+		"inputs": [],
+		"name": "deposit",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function",
+		"payable": true,
+		"signature": "0xd0e30db0"
+	},
+	{
+		"inputs": [],
+		"name": "getBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0x12065fe0"
+	},
+	{
+		"inputs": [],
+		"name": "refundStakeholder",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0x206eb720"
+	},
+	{
+		"inputs": [],
+		"name": "releaseFunds",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0x69d89575"
+	},
+	{
+		"inputs": [],
+		"name": "stakeholder",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function",
+		"constant": true,
+		"signature": "0xf0331393"
+	}
+]
