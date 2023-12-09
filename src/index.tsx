@@ -22,7 +22,7 @@ root.render(
 				algorithm: [darkAlgorithm, compactAlgorithm],
 			}}
 		>
-			<App role="auditor" />
+			<App role="auditor" stakeholderId='user123'/>
 		</ConfigProvider>
 	</React.StrictMode>
 );

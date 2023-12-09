@@ -1,18 +1,10 @@
 import React from 'react';
-import {
-	EditOutlined,
-	EllipsisOutlined,
-	CommentOutlined,
-	MoneyCollectOutlined,
-} from '@ant-design/icons';
+import { EditOutlined, EllipsisOutlined, CommentOutlined, MoneyCollectOutlined } from '@ant-design/icons';
 import { Avatar, Card } from 'antd';
 
 const { Meta } = Card;
 
-const AuditRequestCard = (props: {
-	role: string;
-	openBidModal: () => void;
-}) => (
+const AuditRequestCard = (props: { role: string; openBidModal: () => void; name: string; description: string }) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
 		cover={
@@ -26,19 +18,12 @@ const AuditRequestCard = (props: {
 			props.role === 'owner' ? (
 				<EditOutlined key="edit" />
 			) : (
-				<MoneyCollectOutlined
-					key="money"
-					onClick={props.openBidModal}
-				/>
+				<MoneyCollectOutlined key="money" onClick={props.openBidModal} />
 			),
 			<EllipsisOutlined key="ellipsis" />,
 		]}
 	>
-		<Meta
-			avatar={<Avatar>U</Avatar>}
-			title="Smart Contract for News"
-			description="AI and Manual Audit Required "
-		/>
+		<Meta avatar={<Avatar>U</Avatar>} title={props.name} description={props.description} />
 	</Card>
 );
 

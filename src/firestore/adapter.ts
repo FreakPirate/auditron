@@ -9,7 +9,7 @@ import {
 	AuditFile,
 	ProjectWithAuditorBid,
 } from './types'; // Import your types here
-const serviceAccount = require('../../firebase.json');
+const serviceAccount = require('../firebase.json');
 
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount),

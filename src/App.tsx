@@ -7,10 +7,11 @@ import { Header } from 'antd/es/layout/layout';
 import UploadModal from './UploadModal';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
+import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
-const App = (props: { role: string }) => {
+const App = (props: { role: string; stakeholderId: string }) => {
 	const [selectedView, setSelectedView] = useState('currReqs');
 	// const [isLoading, setIsLoading] = useState(true);
 
@@ -19,7 +20,7 @@ const App = (props: { role: string }) => {
 
 	const getSidebarItems = () => {
 		switch (props.role) {
-			case 'owner':
+			case 'stakeholder':
 			case 'developer':
 				return OwnerItems;
 			case 'auditor':
@@ -30,13 +31,45 @@ const App = (props: { role: string }) => {
 		setSelectedView(key);
 	};
 
+	const getActiveBidProjectsForStakeholderUI = async () => {
+		const activeBidProjects = await getActiveBidProjectsForStakeholder(props.stakeholderId);
+		return activeBidProjects;
+	};
 	const getRightSideContent = (selectedView: string) => {
 		switch (selectedView) {
+			case 'currReqs':
+				const activeBidProjects = getActiveBidProjectsForStakeholderUI();
+				return (
+					<CardContainer>
+						<>
+							{
+								// @ts-ignore
+								activeBidProjects.map(item => {
+									<AuditRequestCard
+										role={props.role}
+										openBidModal={() => setIsBidModalVisible(true)}
+										name={item.projectName}
+										description={item.description}
+									/>;
+								})
+							}
+						</>
+					</CardContainer>
+				);
 			default:
 				return (
 					<CardContainer>
-						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)}/>
-						
+						{/* <AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} />
+						<AuditRequestCard role={props.role} openBidModal={() => setIsBidModalVisible(true)} /> */}
 					</CardContainer>
 				);
 		}
@@ -58,9 +91,7 @@ const App = (props: { role: string }) => {
 						onClick={handleMenuItemSelect}
 					/>
 				</StyledSider>
-				<Layout
-					style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}
-				>
+				<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
 					<Header
 						style={{
 							padding: '2rem',
@@ -71,33 +102,19 @@ const App = (props: { role: string }) => {
 						}}
 					>
 						<div style={{ fontSize: '20px', fontWeight: '700' }}>
-							{
-								OwnerItems.filter(
-									(item) => item.key === selectedView
-								)[0].label
-							}
+							{OwnerItems.filter(item => item.key === selectedView)[0].label}
 						</div>
-						<Button
-							type="primary"
-							onClick={() => setIsUploadModalVisible(true)}
-						>
+						<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
 							{' '}
 							Add new{' '}
 						</Button>
 					</Header>
-					<Content style={{ display: 'flex' }}>
-						{getRightSideContent(selectedView)}
-					</Content>
+
+					<Content style={{ display: 'flex' }}>{getRightSideContent(selectedView)}</Content>
 				</Layout>
 			</Layout>
-			<UploadModal
-				isModalOpen={isUploadModalVisible}
-				closeModal={() => setIsUploadModalVisible(false)}
-			/>
-      <BidModal
-				isModalOpen={isBidModalVisible}
-				closeModal={() => setIsBidModalVisible(false)}
-			/>
+			<UploadModal isModalOpen={isUploadModalVisible} closeModal={() => setIsUploadModalVisible(false)} />
+			<BidModal isModalOpen={isBidModalVisible} closeModal={() => setIsBidModalVisible(false)} />
 		</StyledApp>
 	);
 };
