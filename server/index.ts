@@ -1,5 +1,6 @@
-import express, { Request, Response } from 'express';
 import 'dotenv/config';
+import express, { Request, Response } from 'express';
+import axios from 'axios';
 import multer from 'multer';
 import fs from 'fs';
 import pinataSDK from '@pinata/sdk';
@@ -33,6 +34,11 @@ app.use(express.json());
 
 // For URL-encoded data
 app.use(express.urlencoded({ extended: true }));
+const InfuraAuth = Buffer.from(process.env.INFURA_API_KEY + ':' + process.env.INFURA_API_KEY_SECRET).toString('base64');
+
+// The chain ID of the supported network
+const lineaChainId = '59140';
+
 app.get('/', (req, res) => {
 	res.send('Hello, TypeScript with Express!');
 });
@@ -245,6 +251,21 @@ app.patch('/api/project/assign-auditor/:projectId', async (req: Request, res: Re
 		});
 	} catch (error) {
 		res.status(500).json({ message: error });
+	}
+});
+
+app.get('/api/estimated-gas', async (req: Request, res: Response) => {
+	try {
+		const { data } = await axios.get(`https://gas.api.infura.io/networks/${lineaChainId}/suggestedGasFees`, {
+			headers: {
+				Authorization: `Basic ${InfuraAuth}`,
+			},
+		});
+		console.log('Suggested gas fees:', data);
+		return res.status(200).json(data);
+	} catch (error) {
+		console.log('Server responded with:', error);
+		return res.status(500).json({ message: error });
 	}
 });
 

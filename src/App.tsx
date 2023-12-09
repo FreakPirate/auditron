@@ -1,15 +1,16 @@
-import { PushAPI } from '@pushprotocol/restapi';
-import { Button, Layout, Menu } from 'antd';
+import { CONSTANTS, PushAPI } from '@pushprotocol/restapi';
+import { Button, Drawer, Layout, Menu } from 'antd';
 import { Header } from 'antd/es/layout/layout';
-import { useEffect, useState } from 'react';
+import * as ethers from 'ethers';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import AuditRequestCard from './AuditRequestCard';
 import BidModal from './BidModal';
 import ChatWrapper from './Chatting/ChatWrapper';
+import Login from './Login';
 import NotificationsTab from './Notifications/NotificationsTab';
 import { useSendNotifications } from './Notifications/useSendNotifications';
 import UploadModal from './UploadModal';
-import { AuditorItems, LOGO, OwnerItems } from './constants';
 import {
 	createAuditFile,
 	createBid,
@@ -19,16 +20,18 @@ import {
 	getAvailableBidProjectsForAuditor,
 	getCompletedProjects,
 } from './API';
+import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, LOGO, OwnerItems } from './constants';
 import { AuditorStatus, Project, UserRole, AuditStatus } from './types';
-import Login from './Login';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
 
-let pushUser: PushAPI;
+let signedPushUser: PushAPI;
+let signedUserWalletAddress: string;
 const App = (props: { role: string; stakeholderId: string; userId: string }) => {
 	const [selectedView, setSelectedView] = useState('undergoingAudits');
 	const [isConnected, setIsConnected] = useState(false);
+	const [open, setDrawerOpen] = useState(false);
 	const [sendNotification] = useSendNotifications();
 
 	const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
@@ -51,6 +54,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	};
 	const handleMenuItemSelect = ({ key }: { key: string }) => {
 		setSelectedView(key);
+	};
+
+	const showDrawer = () => {
+		setDrawerOpen(true);
+	};
+
+	const onClose = () => {
+		setDrawerOpen(false);
 	};
 
 	useEffect(() => {
@@ -103,13 +114,16 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 										role={props.role}
 										openBidModal={() => {
 											setSelectedProject(item);
-											setIsBidModalVisible(true);}}
+											setIsBidModalVisible(true);
+										}}
 										name={item.projectName}
+										showDrawer={showDrawer}
 										description={item.description}
 										sendNotification={async () => {
-											console.log('Sending notification');
-											const sendNotifRes = await pushUser.channel.send(['*'], {
-												notification: { title: 'This is title', body: 'This is body' },
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
 											});
 										}}
 										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
@@ -129,13 +143,15 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 								return (
 									<AuditRequestCard
 										role={props.role}
+										showDrawer={showDrawer}
 										openBidModal={() => setIsBidModalVisible(true)}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
-											console.log('Sending notification');
-											const sendNotifRes = await pushUser.channel.send(['*'], {
-												notification: { title: 'This is title', body: 'This is body' },
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
 											});
 										}}
 										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
@@ -155,12 +171,15 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 								return (
 									<AuditRequestCard
 										role={props.role}
+										showDrawer={showDrawer}
 										openBidModal={() => setIsBidModalVisible(true)}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
-											const sendNotifRes = await pushUser.channel.send(['*'], {
-												notification: { title: 'This is title', body: 'This is body' },
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
 											});
 										}}
 										src="https://media-public.canva.com/eVBaE/MAE2LjeVBaE/1/tl.png"
@@ -180,13 +199,15 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 								return (
 									<AuditRequestCard
 										role={props.role}
+										showDrawer={showDrawer}
 										openBidModal={() => setIsBidModalVisible(true)}
 										name={item.projectName}
 										description={item.description}
 										sendNotification={async () => {
-											console.log('Sending notification');
-											const sendNotifRes = await pushUser.channel.send(['*'], {
-												notification: { title: 'This is title', body: 'This is body' },
+											await sendNotification({
+												title: 'Event Triggered',
+												body: 'You have been notified regarding the click on ellipsis icon in the card',
+												recipient: [signedUserWalletAddress],
 											});
 										}}
 										src="https://rocketium.com/images/v2/609213e3d560562f9508621f/resized/661eded7-4633-42ea-b717-7da6dac98c66_1702072772932.png"
@@ -198,26 +219,23 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 				);
 				break;
 			case 'notifications': {
-				rightContent = <NotificationsTab pushUser={pushUser} />;
-				break;
-			}
-			case 'chat': {
-				rightContent = <ChatWrapper pushUser={pushUser} />;
+				rightContent = <NotificationsTab signedPushUser={signedPushUser} />;
 				break;
 			}
 			default:
 				rightContent = (
 					<CardContainer>
 						<AuditRequestCard
+							showDrawer={showDrawer}
 							role={props.role}
 							openBidModal={() => setIsBidModalVisible(true)}
 							name={''}
 							description={''}
 							sendNotification={async () => {
 								await sendNotification({
-									title: 'This is title',
-									body: 'This is body',
-									recipient: ['*'],
+									title: 'Event Triggered',
+									body: 'You have been notified regarding the click on ellipsis icon in the card',
+									recipient: [signedUserWalletAddress],
 								});
 							}}
 							src=""
@@ -248,15 +266,25 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 	};
 
 	// Function for getting handling all events
-	const accountChangeHandler = (account: any) => {
+	const accountChangeHandler = async (account: any) => {
 		// Setting an address data
 		setIsConnected(true);
 		console.log('Account: ', account);
-
-		// TODO:
+		signedUserWalletAddress = account;
+		// Creating a signer object based on the connected account
+		//@ts-ignore
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		const signer = provider.getSigner(account);
+		console.log('Signer: ', signer);
+		signedPushUser = await PushAPI.initialize(signer, { env: CONSTANTS.ENV.STAGING });
+		console.log('signedPushUser: ', signedPushUser);
 		// Add the user to the notification channel
 		// and store the pushUser object in the state
 		// Build a logout button to setIsConnected(false)
+		const res = await signedPushUser.notification.subscribe(
+			`${CHANNEL_ADDRESS}`, // channel address in CAIP format
+		);
+		console.log('res: ', res);
 	};
 
 	const onCreateProjectHandler = async (values: any) => {
@@ -307,56 +335,72 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 
 		console.log('bidState', bidState);
 		await createBid(bidState);
-	}
+	};
 	return (
 		<StyledApp>
-			<Layout>
-				<StyledSider width={250}>
-					<AppLogo className="logo">
-						<LogoWrapper src={LOGO} alt="dAd Space" />
-					</AppLogo>
-					<StyledMenu
-						theme="dark"
-						defaultSelectedKeys={[selectedView]}
-						mode="inline"
-						items={getSidebarItems()}
-						selectedKeys={[selectedView]}
-						onClick={handleMenuItemSelect}
-					/>
-				</StyledSider>
-				<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-					<Header
-						style={{
-							padding: '2rem',
-							background: 'transparent',
-							display: 'flex',
-							justifyContent: 'space-between',
-							alignItems: 'center',
-						}}
-					>
-						<div style={{ fontSize: '20px', fontWeight: '700' }}>
-							{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
-						</div>
-						<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-							{' '}
-							Add new{' '}
-						</Button>
-					</Header>
+			{isConnected && (
+				<Layout>
+					<StyledSider width={250}>
+						<AppLogo className="logo">
+							<LogoWrapper src={LOGO} alt="dAd Space" />
+						</AppLogo>
+						<StyledMenu
+							theme="dark"
+							defaultSelectedKeys={[selectedView]}
+							mode="inline"
+							items={getSidebarItems()}
+							selectedKeys={[selectedView]}
+							onClick={handleMenuItemSelect}
+						/>
+					</StyledSider>
+					<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
+						<Header
+							style={{
+								padding: '2rem',
+								background: 'transparent',
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+							}}
+						>
+							<div style={{ fontSize: '20px', fontWeight: '700' }}>
+								{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
+							</div>
+							<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+								{' '}
+								Add new{' '}
+							</Button>
+						</Header>
 
-					{<Content style={{ display: 'flex' }}>{rightContent}</Content>}
+						{
+							<Content style={{ display: 'flex' }}>
+								{rightContent}
+								<Drawer
+									title="Discussions"
+									placement={'right'}
+									onClose={onClose}
+									open={open}
+									key={'right'}
+									size={'large'}
+								>
+									<ChatWrapper />
+								</Drawer>
+							</Content>
+						}
+					</Layout>
+					<UploadModal
+						isModalOpen={isUploadModalVisible}
+						closeModal={() => setIsUploadModalVisible(false)}
+						onSubmitHandler={onCreateProjectHandler}
+						initialValues={{ name: '', description: '', budget: '0', files: [] }}
+					/>
+					<BidModal
+						isModalOpen={isBidModalVisible}
+						closeModal={() => setIsBidModalVisible(false)}
+						onSubmitHandler={onSubmitBidHandler}
+					/>
 				</Layout>
-				<UploadModal
-					isModalOpen={isUploadModalVisible}
-					closeModal={() => setIsUploadModalVisible(false)}
-					onSubmitHandler={onCreateProjectHandler}
-					initialValues={{ name: '', description: '', budget: '0', files: [] }}
-				/>
-				<BidModal
-					isModalOpen={isBidModalVisible}
-					closeModal={() => setIsBidModalVisible(false)}
-					onSubmitHandler={onSubmitBidHandler}
-				/>
-			</Layout>
+			)}
 			{!isConnected && <Login handleLogin={authenticate} />}
 		</StyledApp>
 	);

@@ -6,15 +6,14 @@ export const OwnerItems = [
 	{ label: 'Undergoing Audits', key: 'undergoingAudits' },
 	{ label: 'Completed Audits', key: 'completedAudits' },
 	{ label: 'Notifications', key: 'notifications' },
-	{ label: 'Chattu', key: 'chat' },
 ];
 export const AuditorItems = [
     { label: 'Available bids', key: 'availableBids' },
     { label: 'Undergoing Audits', key: 'undergoingAudits' },
     { label: 'Completed Audits', key: 'completedAudits' },
     { label: 'Notifications', key: 'notifications' },
-	{ label: 'Chattu', key: 'chat' },
 ];
 
-export const CHANNEL_ADDRESS = 'eip155:5:0x4D92c9a3Db746bD0Fb65957eA6054D9d07d90412';
+export const CHANNEL_ADDRESS = 'eip155:11155111:0x4D92c9a3Db746bD0Fb65957eA6054D9d07d90412';
+export const CHAT_ID = '55d8ba122f6db960bf545ed97e1f98cabf53ae9e5ff912d3ad78a22b00f09139';
 
