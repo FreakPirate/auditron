@@ -4,7 +4,13 @@ import { Avatar, Card } from 'antd';
 
 const { Meta } = Card;
 
-const AuditRequestCard = (props: { role: string; openBidModal: () => void; name: string; description: string }) => (
+const AuditRequestCard = (props: {
+	role: string;
+	openBidModal: () => void;
+	name: string;
+	description: string;
+	sendNotification: () => void;
+}) => (
 	<Card
 		style={{ width: 273, height: 'fit-content' }}
 		cover={
@@ -20,7 +26,7 @@ const AuditRequestCard = (props: { role: string; openBidModal: () => void; name:
 			) : (
 				<MoneyCollectOutlined key="money" onClick={props.openBidModal} />
 			),
-			<EllipsisOutlined key="ellipsis" />,
+			<EllipsisOutlined key="ellipsis" onClick={props.sendNotification} />,
 		]}
 	>
 		<Meta avatar={<Avatar>U</Avatar>} title={props.name} description={props.description} />
