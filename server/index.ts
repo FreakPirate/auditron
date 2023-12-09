@@ -3,6 +3,7 @@ import 'dotenv/config';
 import multer from 'multer';
 import fs from 'fs';
 import pinataSDK from '@pinata/sdk';
+import cors from 'cors';
 import { UserRole } from './firestore/types';
 import {
 	assignAuditorToProject,
@@ -20,11 +21,13 @@ import {
 	updateProjectManualAuditStatus,
 	updateProjectStatus,
 } from './firestore/adapter';
+import { generateAuditReport } from './gpt';
 
 const app = express();
 const port = process.env.PORT || 3001;
 const upload = multer({ dest: 'uploads/' });
 const pinata = new pinataSDK({ pinataJWTKey: process.env.PINATA_JWT });
+app.use(cors());
 
 app.get('/', (req, res) => {
 	res.send('Hello, TypeScript with Express!');
@@ -47,7 +50,20 @@ app.post('/file/upload', upload.single('file'), async (req, res) => {
 		},
 	});
 	console.log('Response from Pinata => ', pinataRes);
-	return res.status(200).json({ ...pinataRes, url: `https://gateway.pinata.cloud/ipfs/${pinataRes.IpfsHash}` });
+	const fileUrl = `https://gateway.pinata.cloud/ipfs/${pinataRes.IpfsHash}`;
+	return res.status(200).json({ ...pinataRes, url: fileUrl });
+});
+
+app.get('/api/audit-report/:fileUrl', async (req: Request, res: Response) => {
+	try {
+		const fileUrl = req.params.fileUrl as string;
+		const auditReport = await generateAuditReport(fileUrl);
+		res.status(200).json({
+			data: auditReport,
+		});
+	} catch (error) {
+		res.status(500).json({ message: error });
+	}
 });
 
 app.get('/api/active-projects/:userId/:role', async (req: Request, res: Response) => {
