@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Button, Input, InputNumber, Modal } from 'antd';
 import UploadDropZone from './UploadDropZone';
 import styled from 'styled-components';
+import { Typography } from 'antd';
+
+const { Text } = Typography;
 
 const BidModal = (props: {
 	isModalOpen: boolean;
 	closeModal: () => void;
 	onSubmitHandler: (values: { budget: string }) => void;
+	budget: number;
 }) => {
 	const { isModalOpen, closeModal } = props;
 
@@ -33,13 +37,18 @@ const BidModal = (props: {
 	return (
 		<>
 			<StyledModal title="Submit your bid" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-				<Input
-					addonBefore={'Budget'}
+				<Text type="danger" italic>
+					*Maximum budget for the audit is {props.budget}.
+				</Text>
+
+				<InputNumber
+					addonBefore={'Bid amount'}
 					prefix="$"
 					style={{ width: '100%' }}
+					max={props.budget}
 					onChange={e =>
 						setFormState({
-							budget: e.target.value,
+							budget: e?.toString()!,
 						})
 					}
 				/>
@@ -62,7 +71,7 @@ const StyledModal = styled(Modal)`
 			}
 		}
 
-		.ant-input-number-group-wrapper {
+		/* .ant-input-number-group-wrapper {
 			height: 50px;
 
 			.ant-input-number-wrapper {
@@ -76,7 +85,7 @@ const StyledModal = styled(Modal)`
 					height: 100%;
 				}
 			}
-		}
+		} */
 	}
 	.ant-modal-content {
 		padding: 24px;

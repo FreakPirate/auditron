@@ -27,7 +27,16 @@ import {
 } from './API';
 import { AuditorStatus, Project, UserRole, AuditStatus, UserBid, AuditReport } from './types';
 import AllBidsModal from './AllBidsModal';
-import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems, ROLE_ADDRESS_MAP, AI_BOT_PRIVATE_KEY } from './constants';
+import {
+	AuditorItems,
+	CHANNEL_ADDRESS,
+	CHAT_ID,
+	IPFS_FILE_URL,
+	LOGO,
+	OwnerItems,
+	ROLE_ADDRESS_MAP,
+	AI_BOT_PRIVATE_KEY,
+} from './constants';
 import { MetaMaskButton, MetaMaskUIProvider } from '@metamask/sdk-react-ui';
 import { ContractAdapter, getSigner } from './adapters/contract';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
@@ -183,6 +192,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 										}}
 										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
 										updateStatus={async () => {
+											const signer = await getSigner();
+											const adapter = new ContractAdapter(signer);
+											const response = await adapter.releaseFunds(item.id);
+											console.log('Smart Contract RELEASE FUNDS => ', response);
+											if (!response) {
+												return;
+											}
+
 											await updateProjectStatus(item.id, 'completed');
 											setCompletedProjects([...completedProjects, item]);
 											setActiveProjects(activeProjects.filter(project => project.id !== item.id));
@@ -258,7 +275,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 				break;
 			case 'notifications': {
 				rightContent = (
-					<div style={{width: '100%', padding: '1rem'}}>
+					<div style={{ width: '100%', padding: '1rem', overflow: 'auto' }}>
 						<NotificationsTab signedPushUser={signedPushUser} />
 					</div>
 				);
@@ -480,7 +497,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		const signer = await getSigner();
 		const adapter = new ContractAdapter(signer);
 		const response = await adapter.createProject(projectId, '0x3f72d7fEa67B2DFf18dA7c0e3BdE2a09938E0e32', values.budget);
-		console.log('response', response);
+		console.log('Smart Contract CREATE PROJECT => ', response);
 	};
 
 	// function to genrate random 10 digit id
@@ -522,6 +539,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
 		showDrawer();
+
+		const signer = await getSigner();
+		const adapter = new ContractAdapter(signer);
+		const response = await adapter.deposit(projectId, bidAmount);
+		console.log('Smart Contract DEPOSIT => ', response);
 	};
 
 	return (
@@ -567,7 +589,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 											display: 'flex',
 											justifyContent: 'space-between',
 											alignItems: 'center',
-											width: '310px'
+											width: '310px',
 										}}
 									>
 										<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
@@ -604,6 +626,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 								isModalOpen={isBidModalVisible}
 								closeModal={() => setIsBidModalVisible(false)}
 								onSubmitHandler={onSubmitBidHandler}
+								budget={selectedProject?.budget!}
 							/>
 							<AllBidsModal
 								isModalOpen={isAllBidsModalVisible}
