@@ -1,21 +1,19 @@
 import { PushAPI } from '@pushprotocol/restapi';
 import { NotificationItem, chainNameType } from '@pushprotocol/uiweb';
-import { useEffect, useState } from "react";
-
+import { useEffect, useState } from 'react';
 
 type Props = {
 	signedPushUser: PushAPI; // This needs to be the one with login details
 };
 
 const NotificationsTab = (props: Props) => {
-
 	const { signedPushUser } = props;
 	const [notificationsList, setNotificationsList] = useState<any>([]);
-	
+
 	useEffect(() => {
 		const fetchNotifications = async () => {
 			if (signedPushUser) {
-				const inboxNotifications = await signedPushUser.notification.list("INBOX");
+				const inboxNotifications = await signedPushUser.notification.list('INBOX');
 				console.log('inboxNotifications: ', inboxNotifications);
 				setNotificationsList(inboxNotifications);
 			}
@@ -24,19 +22,9 @@ const NotificationsTab = (props: Props) => {
 	}, [signedPushUser]);
 
 	return (
-		<div style={{width:'100%'}}>
+		<div style={{ width: '100%' }}>
 			{notificationsList.map((oneNotification: any, id: number) => {
-				const { 
-					cta,
-					title,
-					message,
-					app,
-					icon,
-					image,
-					url,
-					blockchain,
-					notification
-				} = oneNotification;
+				const { cta, title, message, app, icon, image, url, blockchain, notification } = oneNotification;
 
 				return (
 					<NotificationItem
@@ -48,12 +36,11 @@ const NotificationsTab = (props: Props) => {
 						icon={icon}
 						image={image}
 						url={url}
-						// theme={theme}
+						theme={'dark'}
 						chainName={blockchain as chainNameType} // if using Typescript
 					/>
-					);
-				}
-			)}
+				);
+			})}
 		</div>
 	);
 };
