@@ -27,7 +27,9 @@ import {
 } from './API';
 import { AuditorStatus, Project, UserRole, AuditStatus, UserBid, AuditReport } from './types';
 import AllBidsModal from './AllBidsModal';
-import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
+import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems, ROLE_ADDRESS_MAP, AI_BOT_PRIVATE_KEY } from './constants';
+import { MetaMaskButton, MetaMaskUIProvider } from '@metamask/sdk-react-ui';
+import { ContractAdapter, getSigner } from './adapters/contract';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -347,6 +349,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		const apiRes: { data: AuditReport | null } = await res.json();
 		const report = apiRes.data;
 		console.log('apiRes: ', apiRes);
+		await sendNotification({
+			title: 'We have reviewed your smart contract',
+			body: 'Our AI bot has reviewed your smart contract and has generated a report. Please check it out!',
+			recipient: [ROLE_ADDRESS_MAP.STAKEHOLDER],
+		});
 		if (report) {
 			const chatMsgP1 = `
 				SECURITY:
@@ -436,6 +443,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		console.log('projectState', projectState);
 		await createProject(projectState);
 		setActiveBidProjectsforStakeholder([...activeBidProjectsForStakeholder, projectState]);
+		await sendNotification({
+			title: 'New Smart Contract Audit Request!',
+			body: 'A new smart contract audit request has been created on the marketplace. Place a bid now!',
+			recipient: [ROLE_ADDRESS_MAP.AUDITOR],
+		});
 		await createAuditFile({
 			id: generateId(),
 			projectId: selectedProject?.id!,
@@ -457,6 +469,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		// aiAuditStatus: AuditorStatus;
 		// manualAuditStatus: AuditorStatus;
 		// auditorId: string;
+
+		const signer = await getSigner();
+		const adapter = new ContractAdapter(signer);
+		const response = await adapter.createProject(projectId, '0x3f72d7fEa67B2DFf18dA7c0e3BdE2a09938E0e32', values.budget);
+		console.log('response', response);
 	};
 
 	// function to genrate random 10 digit id
@@ -473,98 +490,127 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			bidAmount: values.budget as number,
 			description: '',
 		};
-
 		console.log('bidState', bidState);
 		await createBid(bidState);
+		await sendNotification({
+			title: 'You have a new bid!',
+			body: 'Your smart contract is popular. You have a new bid. Review and accept it now!',
+			recipient: [ROLE_ADDRESS_MAP.STAKEHOLDER],
+		});
 	};
 
 	const showBids = () => {
 		setIsAllBidsModalVisible(true);
 	};
 
-	const onBidSelect = async (projectId: string, id: string) => {
+	const onBidSelect = async (projectId: string, auditorId: string, bidAmount: number) => {
 		setIsAllBidsModalVisible(false);
-		await assignAuditor(projectId, id);
+		await assignAuditor(projectId, auditorId);
 		await updateProjectStatus(projectId, AuditStatus.PENDING);
+		await sendNotification({
+			title: 'Congratulations and Celebrations!',
+			body: 'We have a great news for you! Your bid has been accepted by the stakeholder. You can now start auditing the smart contract',
+			recipient: [ROLE_ADDRESS_MAP.AUDITOR],
+		});
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
 		showDrawer();
 	};
 
 	return (
-		<StyledApp>
-			{isConnected && (
-				<Layout>
-					<StyledSider width={250}>
-						<AppLogo className="logo">
-							<LogoWrapper src={LOGO} alt="dAd Space" />
-						</AppLogo>
-						<StyledMenu
-							theme="dark"
-							defaultSelectedKeys={[selectedView]}
-							mode="inline"
-							items={getSidebarItems()}
-							selectedKeys={[selectedView]}
-							onClick={handleMenuItemSelect}
-						/>
-					</StyledSider>
-					<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
-						<Header
-							style={{
-								padding: '2rem',
-								background: 'transparent',
-								display: 'flex',
-								justifyContent: 'space-between',
-								alignItems: 'center',
-							}}
-						>
-							<div style={{ fontSize: '20px', fontWeight: '700' }}>
-								{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
-							</div>
-							<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
-								{' '}
-								Add new{' '}
-							</Button>
-						</Header>
-
-						{
-							<Content style={{ display: 'flex' }}>
-								{rightContent}
-								<Drawer
-									title="Discussions"
-									placement={'right'}
-									onClose={onClose}
-									open={open}
-									key={'right'}
-									size={'large'}
+		<React.StrictMode>
+			<MetaMaskUIProvider
+				sdkOptions={{
+					dappMetadata: {
+						name: 'Auditron',
+					},
+				}}
+			>
+				<StyledApp>
+					{isConnected && (
+						<Layout>
+							<StyledSider width={250}>
+								<AppLogo className="logo">
+									<LogoWrapper src={LOGO} alt="dAd Space" />
+								</AppLogo>
+								<StyledMenu
+									theme="dark"
+									defaultSelectedKeys={[selectedView]}
+									mode="inline"
+									items={getSidebarItems()}
+									selectedKeys={[selectedView]}
+									onClick={handleMenuItemSelect}
+								/>
+							</StyledSider>
+							<Layout style={{ height: '100vh', background: 'rgb(25, 25, 25)' }}>
+								<Header
+									style={{
+										padding: '2rem',
+										background: 'transparent',
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'center',
+									}}
 								>
-									<ChatWrapper />
-								</Drawer>
-							</Content>
-						}
-					</Layout>
-					<UploadModal
-						isModalOpen={isUploadModalVisible}
-						closeModal={() => setIsUploadModalVisible(false)}
-						onSubmitHandler={onCreateProjectHandler}
-						initialValues={{ name: '', description: '', budget: '0', files: [] }}
-					/>
-					<BidModal
-						isModalOpen={isBidModalVisible}
-						closeModal={() => setIsBidModalVisible(false)}
-						onSubmitHandler={onSubmitBidHandler}
-					/>
-					<AllBidsModal
-						isModalOpen={isAllBidsModalVisible}
-						closeModal={() => setIsAllBidsModalVisible(false)}
-						projectId={selectedProject?.id!}
-						onSubmitHandler={onBidSelect}
-						bids={allBids}
-					/>
-				</Layout>
-			)}
-			{!isConnected && <Login handleLogin={authenticate} />}
-		</StyledApp>
+									<div style={{ fontSize: '20px', fontWeight: '700' }}>
+										{getSidebarItems()?.filter(item => item.key === selectedView)[0].label}
+									</div>
+									<div
+										style={{
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center',
+											width: '310px'
+										}}
+									>
+										<Button type="primary" onClick={() => setIsUploadModalVisible(true)}>
+											{' '}
+											Add new{' '}
+										</Button>
+										<MetaMaskButton theme={'light'} color="white"></MetaMaskButton>
+									</div>
+								</Header>
+
+								{
+									<Content style={{ display: 'flex' }}>
+										{rightContent}
+										<Drawer
+											title="Discussions"
+											placement={'right'}
+											onClose={onClose}
+											open={open}
+											key={'right'}
+											size={'large'}
+										>
+											<ChatWrapper />
+										</Drawer>
+									</Content>
+								}
+							</Layout>
+							<UploadModal
+								isModalOpen={isUploadModalVisible}
+								closeModal={() => setIsUploadModalVisible(false)}
+								onSubmitHandler={onCreateProjectHandler}
+								initialValues={{ name: '', description: '', budget: '0', files: [] }}
+							/>
+							<BidModal
+								isModalOpen={isBidModalVisible}
+								closeModal={() => setIsBidModalVisible(false)}
+								onSubmitHandler={onSubmitBidHandler}
+							/>
+							<AllBidsModal
+								isModalOpen={isAllBidsModalVisible}
+								closeModal={() => setIsAllBidsModalVisible(false)}
+								projectId={selectedProject?.id!}
+								onSubmitHandler={onBidSelect}
+								bids={allBids}
+							/>
+						</Layout>
+					)}
+					{!isConnected && <Login handleLogin={authenticate} />}
+				</StyledApp>
+			</MetaMaskUIProvider>
+		</React.StrictMode>
 	);
 };
 
@@ -588,6 +634,7 @@ const StyledMenu = styled(Menu)`
 	.ant-menu-item {
 		margin: 8px 11px;
 		width: 90%;
+		font-size: 17px;
 		&:hover {
 			/* background: #f73859 !important; */
 		}
