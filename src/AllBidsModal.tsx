@@ -9,7 +9,7 @@ import GasInfoComponent from './GasInfo';
 const AllBidsModal = (props: {
 	isModalOpen: boolean;
 	closeModal: () => void;
-	onSubmitHandler: (projectId: string, id: string) => void;
+	onSubmitHandler: (projectId: string, id: string, bidAmount: number) => void;
 	projectId: string;
 	bids: UserBid[];
 }) => {
@@ -49,7 +49,7 @@ const AllBidsModal = (props: {
 									</p>
 									<Button
 										type="primary"
-										onClick={() => props.onSubmitHandler(projectId, bid.auditorId)}
+										onClick={() => props.onSubmitHandler(projectId, bid.auditorId, bid.bidAmount)}
 									>
 										Accept
 									</Button>
