@@ -192,6 +192,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 										}}
 										src="https://media-public.canva.com/2BiPA/MAFhRB2BiPA/1/tl.png"
 										updateStatus={async () => {
+											const signer = await getSigner();
+											const adapter = new ContractAdapter(signer);
+											const response = await adapter.releaseFunds(item.id);
+											console.log('Smart Contract RELEASE FUNDS => ', response);
+											if (!response) {
+												return;
+											}
+
 											await updateProjectStatus(item.id, 'completed');
 											setCompletedProjects([...completedProjects, item]);
 											setActiveProjects(activeProjects.filter(project => project.id !== item.id));
@@ -481,12 +489,8 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 
 		const signer = await getSigner();
 		const adapter = new ContractAdapter(signer);
-		const response = await adapter.createProject(
-			projectId,
-			'0x3f72d7fEa67B2DFf18dA7c0e3BdE2a09938E0e32',
-			values.budget,
-		);
-		console.log('response', response);
+		const response = await adapter.createProject(projectId, '0x3f72d7fEa67B2DFf18dA7c0e3BdE2a09938E0e32', values.budget);
+		console.log('Smart Contract CREATE PROJECT => ', response);
 	};
 
 	// function to genrate random 10 digit id
@@ -528,6 +532,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
 		showDrawer();
+
+		const signer = await getSigner();
+		const adapter = new ContractAdapter(signer);
+		const response = await adapter.deposit(projectId, bidAmount);
+		console.log('Smart Contract DEPOSIT => ', response);
 	};
 
 	return (
