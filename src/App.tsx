@@ -465,6 +465,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		// aiAuditStatus: AuditorStatus;
 		// manualAuditStatus: AuditorStatus;
 		// auditorId: string;
+
+		const signer = await getSigner();
+		const adapter = new ContractAdapter(signer);
+		const response = await adapter.createProject(projectId, '0x3f72d7fEa67B2DFf18dA7c0e3BdE2a09938E0e32', values.budget);
+		console.log('response', response);
 	};
 
 	// function to genrate random 10 digit id
@@ -506,11 +511,6 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
 		showDrawer();
-
-		// const signer = await getSigner();
-		// const adapter = new ContractAdapter(signer);
-		// const response = await adapter.createProject(projectId, auditorId, bidAmount);
-		// console.log('response', response);
 	};
 
 	return (
@@ -630,6 +630,7 @@ const StyledMenu = styled(Menu)`
 	.ant-menu-item {
 		margin: 8px 11px;
 		width: 90%;
+		font-size: 17px;
 		&:hover {
 			/* background: #f73859 !important; */
 		}
