@@ -482,7 +482,7 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 
 	const onBidSelect = async (projectId: string, auditorId: string, bidAmount: number) => {
 		setIsAllBidsModalVisible(false);
-		await assignAuditor(projectId, id);
+		await assignAuditor(projectId, auditorId);
 		await updateProjectStatus(projectId, AuditStatus.PENDING);
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
