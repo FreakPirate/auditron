@@ -456,7 +456,14 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			ipfsHash: 'test123',
 			url: 'https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J',
 		});
-		await sendReportToGroupChat();
+
+		await signedPushUser.chat.send(CHAT_ID, {
+			type: 'Text',
+			content: `Hey Auditron! Please review the following smart contract.
+				https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J
+			`,
+		});
+
 		// TODO
 		// await createAuditFile('https://gateway.pinata.cloud/ipfs/QmTZc3kvBfiag2KjVvzFMQ4Vgv61an61MaqtftAujCNu6J');
 
