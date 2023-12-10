@@ -27,7 +27,7 @@ import {
 } from './API';
 import { AuditorStatus, Project, UserRole, AuditStatus, UserBid, AuditReport } from './types';
 import AllBidsModal from './AllBidsModal';
-import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems } from './constants';
+import { AuditorItems, CHANNEL_ADDRESS, CHAT_ID, IPFS_FILE_URL, LOGO, OwnerItems, ROLE_ADDRESS_MAP, AI_BOT_PRIVATE_KEY } from './constants';
 // import { getActiveBidProjectsForStakeholder } from './firestore/adapter';
 
 const { Content, Sider } = Layout;
@@ -343,6 +343,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		const apiRes: { data: AuditReport | null } = await res.json();
 		const report = apiRes.data;
 		console.log('apiRes: ', apiRes);
+		await sendNotification({
+			title: 'We have reviewed your smart contract',
+			body: 'Our AI bot has reviewed your smart contract and has generated a report. Please check it out!',
+			recipient: [ROLE_ADDRESS_MAP.STAKEHOLDER],
+		});
 		if (report) {
 			const chatMsgP1 = `
 				SECURITY:
@@ -432,6 +437,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		console.log('projectState', projectState);
 		await createProject(projectState);
 		setActiveBidProjectsforStakeholder([...activeBidProjectsForStakeholder, projectState]);
+		await sendNotification({
+			title: 'New Smart Contract Audit Request!',
+			body: 'A new smart contract audit request has been created on the marketplace. Place a bid now!',
+			recipient: [ROLE_ADDRESS_MAP.AUDITOR],
+		});
 		await createAuditFile({
 			id: generateId(),
 			projectId: selectedProject?.id!,
@@ -469,9 +479,13 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 			bidAmount: values.budget as number,
 			description: '',
 		};
-
 		console.log('bidState', bidState);
 		await createBid(bidState);
+		await sendNotification({
+			title: 'You have a new bid!',
+			body: 'Your smart contract is popular. You have a new bid. Review and accept it now!',
+			recipient: [ROLE_ADDRESS_MAP.STAKEHOLDER],
+		});
 	};
 
 	const showBids = () => {
@@ -482,6 +496,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 		setIsAllBidsModalVisible(false);
 		await assignAuditor(projectId, id);
 		await updateProjectStatus(projectId, AuditStatus.PENDING);
+		await sendNotification({
+			title: 'Congratulations and Celebrations!',
+			body: 'We have a great news for you! Your bid has been accepted by the stakeholder. You can now start auditing the smart contract',
+			recipient: [ROLE_ADDRESS_MAP.AUDITOR],
+		});
 		setActiveProjects([...activeProjects, selectedProject!]);
 		setActiveBidProjectsforStakeholder(activeBidProjectsForStakeholder.filter(project => project.id !== projectId));
 		showDrawer();
