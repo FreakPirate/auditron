@@ -255,7 +255,11 @@ const App = (props: { role: string; stakeholderId: string; userId: string }) => 
 				);
 				break;
 			case 'notifications': {
-				rightContent = <NotificationsTab signedPushUser={signedPushUser} />;
+				rightContent = (
+					<div style={{width: '100%', padding: '1rem'}}>
+						<NotificationsTab signedPushUser={signedPushUser} />
+					</div>
+				);
 				break;
 			}
 			default:

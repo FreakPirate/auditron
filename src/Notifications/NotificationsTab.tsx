@@ -24,7 +24,7 @@ const NotificationsTab = (props: Props) => {
 	}, [signedPushUser]);
 
 	return (
-		<div>
+		<div style={{width:'100%'}}>
 			{notificationsList.map((oneNotification: any, id: number) => {
 				const { 
 					cta,
